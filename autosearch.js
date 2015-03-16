@@ -1,30 +1,36 @@
 // Test script to perform a simple text search on the portal, produces screen captures to show before and after
-// FM - Although I'm not sure the actual functionality is working as yet - results do not seem to filter when manually performed
-casper.test.begin('Test the search function', 5, function suite(test) {
+var links;
+var searchBtn;
+var searchFormLinks;
+
+casper.test.begin('Test the search function', 3, function suite(test) {
     casper.start('https://dyfi.cobwebproject.eu', function() {
-	
-		// First tests that the url to search is available before clicking it
 		console.log('current url location is ' + this.getCurrentUrl()); 
-        test.assertExists('span.fa.fa-search');
-		
+		// Create an array of links available to find the search button
+		 links = this.evaluate(function() {
+			var elements = __utils__.findAll('span');
+			return elements.map(function(e) {
+				return e.getAttribute('class');
+			});
+		});
     });
 	
-	// ensures the link is available to click
-	casper.waitUntilVisible('span.fa.fa-search', function() {
-        this.click('span.fa.fa-search');
-    });
-	
-	// Waits for a the search page to load - checks the control
-	casper.waitUntilVisible('input.form-control.ng-pristine.ng-valid', function() {
-    console.log('clicked ok, new location is ' + this.getCurrentUrl());
-	test.assertExists('input.form-control.ng-pristine.ng-valid');
+	casper.then(function(){
+		// Allocate the search button to be clicked
+		searchBtn = links[5];
+		// Start building up the control name to use in the button click event
+		searchBtn = searchBtn.replace(/ /g, ".");
+		searchBtn = 'span.' + searchBtn;
+		// Click the search button
+		this.click(searchBtn);
 	});
+	
 
 	// Checks the form for submission exists
-	casper.then(function(){
+	casper.wait(3000, function(){
 		this.test.assertExists({
 				type: 'xpath',
-				path: '//*[@id="search_container"]/form'
+				path: '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[2]/div[2]/div/div[1]/form'
 			}, 'the element exists');
 		
 		});
@@ -33,7 +39,7 @@ casper.test.begin('Test the search function', 5, function suite(test) {
 	casper.then(function(){
 		this.test.assertExists({
 				type: 'xpath',
-				path: '//*[@id="search_container"]/form/div[1]/div/input'
+				path: '//*[@id="gn-any-field"]'
 			}, 'the text box exists');
 			
 			});
@@ -41,7 +47,7 @@ casper.test.begin('Test the search function', 5, function suite(test) {
 	// Complete the form with test data
 	casper.then(function(){
 		this.fillXPath('form', {
-				'//*[@id="search_container"]/form/div[1]/div/input':    'testing testing testing'
+				'//*[@id="gn-any-field"]':    'nottingham'
 			}, false);
 			
 			});
