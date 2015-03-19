@@ -1,9 +1,14 @@
-// Test script to perform a simple text search on the portal, produces screen captures to show before and after
+/* 
+Test script to perform a simple text search on the portal,
+produces screen captures to show before and after.
+TODO: Add final check for returned search results
+*/
 var links;
 var searchBtn;
 var searchFormLinks;
 
-casper.test.begin('Test the search function', 3, function suite(test) {
+casper.test.begin('Test the search function', 4, function suite(test) {
+
     casper.start('https://dyfi.cobwebproject.eu', function() {
 		console.log('current url location is ' + this.getCurrentUrl()); 
 		// Create an array of links available to find the search button
@@ -21,6 +26,7 @@ casper.test.begin('Test the search function', 3, function suite(test) {
 		// Start building up the control name to use in the button click event
 		searchBtn = searchBtn.replace(/ /g, ".");
 		searchBtn = 'span.' + searchBtn;
+        test.assertExists(searchBtn, "search button found");
 		// Click the search button
 		this.click(searchBtn);
 	});
@@ -29,28 +35,25 @@ casper.test.begin('Test the search function', 3, function suite(test) {
 	// Checks the form for submission exists
 	casper.wait(3000, function(){
 		this.test.assertExists({
-				type: 'xpath',
-				path: '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[2]/div[2]/div/div[1]/form'
-			}, 'the element exists');
-		
-		});
+			type: 'xpath',
+			path: '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[2]/div[2]/div/div[1]/form'
+		}, 'search form found');		
+	});
 
 	// Checks the text box for completion exists
 	casper.then(function(){
 		this.test.assertExists({
-				type: 'xpath',
-				path: '//*[@id="gn-any-field"]'
-			}, 'the text box exists');
-			
-			});
+		    type: 'xpath',
+			path: '//*[@id="gn-any-field"]'
+		}, 'search text input box found');		
+	});
 	
 	// Complete the form with test data
 	casper.then(function(){
 		this.fillXPath('form', {
-				'//*[@id="gn-any-field"]':    'nottingham'
-			}, false);
-			
-			});
+			'//*[@id="gn-any-field"]':'nottingham'
+		}, false);
+	});
 	
 	// Set the screen size
 	casper.then(function(){
@@ -59,13 +62,13 @@ casper.test.begin('Test the search function', 3, function suite(test) {
 	
 	// Perform a screen capture pre search
 	casper.then(function(){
-		casper.capture("search.png");
+		casper.capture("searchbefore.png");
 	});
 	
 	// Ensure the button control exists to be clicked
 	casper.wait(5000, function() {
 		console.log('filled text box and taken screen shot, checking button exists');
-		test.assertExists('i.fa.fa-search');
+		test.assertExists('i.fa.fa-search', "search submit button found");
 	});
 	
 	// Click the search button
