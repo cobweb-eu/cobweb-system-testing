@@ -93,10 +93,10 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
     );
    
     // try click the login link again because of bug!
-    /*   
+
     casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link again");
-    });*/
+    });
     
     casper.then(function() {
         console.log('Looking for logout link');
