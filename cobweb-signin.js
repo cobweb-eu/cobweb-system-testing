@@ -68,7 +68,7 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
         }, function then() {
             casper.test.pass("COBWEB Login page loaded");
         }, function timeout() {
-            caspter.test.fail("Timed out waiting for COBWEB login page to load (5s)", {name: 'COBWEB Login page loaded'});
+            casper.test.fail("Timed out waiting for COBWEB login page to load (5s)", {name: 'COBWEB Login page loaded'});
         }
     );
 
@@ -93,7 +93,6 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
     );
    
     // try click the login link again because of bug!
-
     casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link again");
     });
