@@ -108,7 +108,7 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
 		this.test.assertNotVisible({
 		    type: 'xpath',
 			path: XPATH_LOGIN_LINK
-		}, 'Login link found');
+		}, 'Login link not visible');
     });
     
     
