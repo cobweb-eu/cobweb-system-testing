@@ -5,8 +5,8 @@
 var firstUrl;
 var x = require('casper').selectXPath;
 
-var XPATH_LOGIN_LINK = '//a[text()=" Login"]';
-var XPATH_LOGOUT_LINK = '//a[text()=" Logout"]';
+var XPATH_LOGIN_LINK = '//a[text()=" Sign in"]';
+var XPATH_LOGOUT_LINK = '//a[text()=" Sign out"]';
 var XPATH_COBWEB_IDP_BUTTON = '//button[1]';
 var XPATH_COOKIE_ACCEPT = '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[1]/p[3]/span[1]';
 
