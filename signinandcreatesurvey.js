@@ -163,13 +163,12 @@ casper.test.begin('Test the log in function', 12, function suite(test) {
 	
 	// Retrieve links on admin screen
 	casper.wait(3000, function(){
-		 optionLinks = this.evaluate(function() {
-        var elements = __utils__.findAll('a');
-        return elements.map(function(e) {
-            return e.getAttribute('id');
+        optionLinks = this.evaluate(function() {
+            var elements = __utils__.findAll('a');
+            return elements.map(function(e) {
+                return e.getAttribute('id');
+            });
         });
-    });
-		
 	});
 	
 	casper.then(function(){
@@ -337,6 +336,7 @@ this.sendKeys(titleText, 'automated test survey 115');
 	casper.run(function() {
         test.done();
     });
+    
 	
 	phantom.clearCookies();
 });

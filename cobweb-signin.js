@@ -17,7 +17,6 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
         this.viewport(1920, 1200);
     });
     
-    // this may help mitigate no logout visible bug
 	casper.thenClick(x(XPATH_COOKIE_ACCEPT), function() {
 	    console.log("Accepting cookie policy");
 	});
@@ -96,6 +95,7 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
     casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link again");
     });
+    
     
     casper.then(function() {
         console.log('Looking for logout link');
