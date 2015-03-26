@@ -59,7 +59,8 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     
     // test correct page has loaded
     casper.then(function() {
-        test.assertTitle("COBWEB Dyfi Biosphere Reserve Portal (Beta) - Cobweb", "Portal homepage displayed");    
+        test.assertTitle("COBWEB Dyfi Biosphere Reserve Portal (Beta) - Cobweb", "Portal homepage displayed");
+        casper.capture('image_output/1_Start_Page.png');
     });
     
     casper.then(function() {
@@ -84,8 +85,10 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         function check() {
             return this.getCurrentUrl() != firstUrl;
         }, function then() {
+            casper.capture('image_output/2_WAYF_Page_Pass.png');
             casper.test.pass('WAYF Page Loaded');
         }, function timeout() {
+            casper.capture('image_output/2_WAYF_Page_Fail.png');
             casper.test.fail('Timed out waiting for WAYF page to load (5s)', {name: 'WAYF Page Loaded'});
         }
     );
@@ -98,9 +101,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         function check() {
             return this.getCurrentUrl() != firstUrl;
         }, function then() {
+            casper.capture('image_output/3_COBWEB_Login_Page_Pass.png');
             casper.test.pass('COBWEB Login page displayed');
             firstUrl = this.getCurrentUrl();
         }, function timeout() {
+            casper.capture('image_output/3_COBWEB_Login_Page_Fail.png');
             casper.test.fail('Timed out waiting for COBWEB Login to load (5s)', {name: 'COBWEB Login page displayed'});
         }
     );
@@ -125,6 +130,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     );
     
     casper.then(function() {
+        casper.capture('image_output/4_Logged_in.png');
         this.test.assertVisible({
 	        type: 'xpath',
 		    path: XPATH_LOGOUT_LINK
@@ -149,8 +155,10 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         function check() {
             return this.getCurrentUrl() != firstUrl;
         }, function then() {
+            casper.capture('image_output/5_Metadata_list_page_Pass.png');
             casper.test.pass("Main editor page loaded");
         }, function timeout() {
+            casper.capture('image_output/5_Metadata_list_page_Fail.png');
             casper.test.fail("Timed out waiting for editor page(5s)", {name: 'Main editor page loaded'});
         }
     );
@@ -174,7 +182,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
             return this.getCurrentUrl() != firstUrl;
         }, function then() {
             casper.test.pass("Survey creation page loaded");
-        }, function timeout() {
+        }, function timeout() {    
             casper.test.fail("Timed out waiting for survey creation page (5s)", {name: 'Survey creation page loaded'});
         }
     );
@@ -183,9 +191,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_DATASET_SELECTOR),
 	        function pass() {
+    	        casper.capture('image_output/6_Survey_Creator_Page_Pass.png');
 	            casper.test.pass("Survey dataset asset loaded");
 	        },
 	        function fail() {
+                casper.capture('image_output/6_Survey_Creator_Page_Fail.png');
 	            casper.test.fail("Survey creation page did not finish loading assets", {name: "Survey dataset asset loaded"});
 	        }
 	    );
@@ -238,6 +248,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
 	    fields[XPATH_GROUP_NAME_INPUT] = valueForGroup;
 		this.fillXPath('form', fields, false);
 		firstUrl = this.getCurrentUrl();
+        casper.capture('image_output/7_Survey_Creator_Filled.png');
     });
     
     casper.thenClick(x(XPATH_SURVEY_CREATE_BUTTON), function() {
@@ -258,9 +269,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_METADATA_FORM),
 	        function pass() {
+	            casper.capture('image_output/8_Metadata_editor_page_Pass.png');
 	            casper.test.pass("Survey metadata editor loaded ok");
 	        },
 	        function fail() {
+	            casper.capture('image_output/8_Metadata_editor_page_Fail.png');
 	            casper.test.fail("Survey metatdata editor failed to laod", {name: "Survey metadata editor loaded ok"});
 	        }
 	    );
@@ -284,6 +297,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
 	    fields[XPATH_SURVEY_TITLE_INPUT] = test_survey_title;
 	    fields[XPATH_METADATA_ABSTRACT_INPUT] = "Auto-created test survey from Registered Use Case auto system test";
 		this.fillXPath('form', fields, false);
+        casper.capture('image_output/9_Metadata_editor_page_filled.png');
     });
     
     casper.thenClick(x(XPATH_METADATA_SAVE_BUTTON), function() {
@@ -293,9 +307,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     casper.then(function() {
         this.waitWhileVisible(x(XPATH_METADATA_FADE_BACKDROP),
             function then() {
+	            casper.capture('image_output/9_Metadata_editor_saved_Pass.png');
                 casper.test.pass("Survey renamed successfully");
             },
             function onTimeout() {
+                casper.capture('image_output/9_Metadata_editor_saved_Fail.png');
                 casper.test.fail("Timed out saving the survey", {name: "Survey renamed successfully"});
             }
         );
@@ -310,11 +326,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_LIST_AREA),
 	        function pass() {
-	            casper.capture("SurveyListLoaded.png");
+                casper.capture('image_output/10_Metadata_list_new_survey_Pass.png');
 	            casper.test.pass("Survey metadata list loaded ok");
 	        },
 	        function fail() {
-	            casper.capture("SurveyListLoaded.png");
+                casper.capture('image_output/10_Metadata_list_new_survey_Fail.png');
 	            casper.test.fail("Timed out waiting for survey metatdata editor to load (5s)", {name: "Survey metadata list loaded ok"});
 	        }
         );
@@ -344,7 +360,9 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
                 type: 'xpath',
                 path: XPATH_SURVEY_DETAIL_TITLE
             }, " ".concat(test_survey_title), 'Loaded survey page ok');
+            casper.capture('image_output/11_Survey_Detail_Page_Pass.png');
         }, function timeout() { 
+            casper.capture('image_output/11_Survey_Detail_Page_Fail.png');
             casper.test.fail("Timed out waiting for survey page (5s)", {name: 'Loaded survey page ok'});
         }
     );
@@ -374,7 +392,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
     casper.withPopup(/cobweb-authoring-tool/, function() {
     
         casper.viewport(1920, 1200).then(function() {
-            casper.capture('popup.png');            
+            casper.capture('image_output/12_Survey_Designer_Popup.png');
         });
         
         this.test.assertSelectorHasText({
@@ -394,6 +412,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         });
         
         casper.then(function() {
+            casper.capture('image_output/13_Survey_Designer_edit_title.png');
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_OPTIONS_DIALOG
@@ -412,6 +431,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
             var fields = {};
 	        fields[XPATH_AT_TEXT_TITLE] = "Your Name";
 		    this.fillXPath('form', fields, false);
+		    casper.capture('image_output/14_Survey_Designer_edit_title_filled.png');
         });
         
         casper.then(function() {
@@ -423,6 +443,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         
         casper.thenClick(x(XPATH_AT_OPTIONS_SUBMIT_BUTTON), function() {
             console.log("Clicked widget options submit button");
+            casper.capture('image_output/15_Survey_Designer_edit_title_submitted.png');
         });
         
         // DRAG AND DROP CODE
@@ -434,6 +455,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         });
         
         casper.then(function() {
+            casper.capture('image_output/16_Survey_Designer_added_photo.png');
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_IMAGE_TITLE_INPUT
@@ -445,10 +467,12 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
             var fields = {};
 	        fields[XPATH_AT_IMAGE_TITLE_INPUT] = "Take Picture!";
 		    this.fillXPath('form', fields, false);
+		    casper.capture('image_output/17_Survey_Designer_photo_filled.png');
         });
         
         casper.thenClick(x(XPATH_AT_OPTIONS_SUBMIT_BUTTON), function() {
             console.log("Clicked widget options submit button");
+            casper.capture('image_output/18_Survey_Designer_photo_saved.png');
         });
         
         casper.then(function() {
@@ -465,9 +489,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         casper.then(function() {
             this.waitUntilVisible(x(XPATH_AT_SAVE_CONFIRM_DIALOG),
                 function then() {
+                    casper.capture('image_output/19_Survey_Designer_save_Pass.png');
                     casper.test.pass("Survey saved successfully");
                 },
                 function onTimeout() {
+                    casper.capture('image_output/19_Survey_Designer_save_Fail.png');
                     casper.test.fail("Timed out saving the survey", {name: "Survey saved successfully"});
                 }
             );
@@ -478,6 +504,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         });
         
         casper.then(function() {
+            casper.capture('image_output/20_Survey_Synchronised.png');
             this.test.assertSelectorHasText({
                 type: 'xpath',
                 path: XPATH_AT_SAVE_STATUS
