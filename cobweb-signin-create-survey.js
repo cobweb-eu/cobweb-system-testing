@@ -512,9 +512,7 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         });   
         
     });
-    
-    // assert we can see the survey in the portal when logged in
-    
+   
     
     // Run all tests and finish
 	casper.run(function() {
