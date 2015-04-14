@@ -14,15 +14,15 @@ var XPATH_LOGIN_LINK = '//a[text()=" Sign in"]';
 var XPATH_LOGOUT_LINK = '//a[text()=" Sign out"]';
 var XPATH_COBWEB_IDP_BUTTON = '//button[1]';
 var XPATH_ADD_NEW_RECORD_LINK = '//*[@id="ng-app"]/body/div[1]/div[2]/div/div[2]/ul/li[5]/a'
-var XPATH_ADD_CONTENT_BUTTON = '//span[text()="Add content"]';
+var XPATH_ADD_CONTENT_BUTTON = '//span[text()="Create..."]';
 var XPATH_SURVEY_DATASET_SELECTOR = '//*[@id="template-survey"]';
-var XPATH_SURVEY_TEMPLATE_SELECTOR = '//a[text()="Template Survey Biological Monitoring"]';
+var XPATH_SURVEY_TEMPLATE_SELECTOR = '//a[text()="Biodiversity (default survey template)"]';
 var XPATH_SURVEY_TEMPLATES_LIST = '//*[@id="gn-new-metadata-container"]/div[3]/div[2]/div/div[2]/div';
 var XPATH_GROUP_NAME_INPUT = '//*[@id="groupName"]';
 var XPATH_SURVEY_CREATE_BUTTON = '//*[@id="gn-new-metadata-container"]/div[3]/div[4]/div/button[1]';
 var XPATH_SURVEY_METADATA_FORM = '//*[@id="gn-el-16"]';
 var XPATH_SURVEY_TITLE_INPUT = '//*[@id="gn-field-21"]';
-var XPATH_SURVEY_METADATA_SAVECLOSE_BUTTON = '//*[@id="ng-app"]/body/div[2]/div[2]/div[1]/nav/div[2]/button[5]';
+var XPATH_SURVEY_METADATA_SAVECLOSE_BUTTON = '//*[@id="ng-app"]/body/div[2]/div[3]/div[1]/nav/div[2]/button[5]';
 var XPATH_SURVEY_EDITOR_LIST_LINK = '//a[text()="TEMP"]';
 var XPATH_SURVEY_DETAIL_TITLE = '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[2]/div[4]/div/div[2]/div[1]/h2';
 var XPATH_AT_SURVEY_TITLE = '//*[@id="form_title"]';
@@ -34,12 +34,12 @@ var XPATH_AT_OPTIONS_SUBMIT_BUTTON = '/html/body/div[8]/div[11]/div/button[1]';
 var XPATH_AT_IMAGE_CAP_WIDGET = '//*[@id="elements"]/li[7]';
 var XPATH_AT_DROPPABLE_AREA = '//*[@id="form-content"]';
 var XPATH_AT_IMAGE_TITLE_INPUT = '//*[@id="image_title"]';
-var XPATH_AT_SAVE_BUTTON = '//a[text()="Save"]';
+var XPATH_AT_SAVE_BUTTON = '//a[text()="Save As"]';
 var XPATH_AT_SAVE_CONFIRM_DIALOG = '//*[@id="feedback"]';
 var XPATH_AT_SAVE_CONFIRM_CLOSE_BUTTON = '//*[@id="feedback"]/div[1]/button';
 var XPATH_AT_SAVE_STATUS = '//*[@id="sync_status"]';
 var XPATH_SURVEY_LIST_AREA = '//*[@id="ng-app"]/body/div[2]/div/div[1]/div[1]/div[2]/div[2]/div[2]/div/table';
-var XPATH_METADATA_SAVE_BUTTON = '//*[@id="ng-app"]/body/div[2]/div[2]/div[1]/nav/div[2]/div[4]/button[1]';
+var XPATH_METADATA_SAVE_BUTTON = '//*[@id="ng-app"]/body/div[2]/div[3]/div[1]/nav/div[2]/div[3]/button[1]';
 var XPATH_METADATA_FADE_BACKDROP = '//*[@id="ng-app"]/body/div[2]/div[2]/div[2]/div[1]';
 var XPATH_METADATA_ABSTRACT_INPUT = '//*[@id="gn-field-29"]';
 
@@ -49,7 +49,7 @@ var test_run_time = new Date();
 var test_survey_title = TEST_SURVEY_TITLE_BASE.concat(test_run_time.toString());
 
 // start the tests!
-casper.test.begin('Registered user use-case test', 33, function suite(test) {
+casper.test.begin('Registered user use-case test', 34, function suite(test) {
     casper.start('https://dyfi.cobwebproject.eu');
    
     // set up the viewport for screen capping
@@ -221,7 +221,6 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
         }, 'Survey templates are displayed');
     });
     
-    
     casper.thenClick(x(XPATH_SURVEY_TEMPLATE_SELECTOR), function() {
         console.log("Selected Biological Monitoring template");
     });
@@ -290,6 +289,11 @@ casper.test.begin('Registered user use-case test', 33, function suite(test) {
             type: 'xpath',
 			path: XPATH_SURVEY_METADATA_SAVECLOSE_BUTTON
         }, 'Survey metadata save and close button exists');
+        
+        this.test.assertVisible({
+            type: 'xpath',
+			path: XPATH_METADATA_SAVE_BUTTON
+        }, 'Survey metadata save button exists');
 	});
     
     casper.then(function() {
