@@ -22,7 +22,7 @@ class PublishTests(SurveyTest):
         public_survey_name = self._create_survey("PubTest Public")
         private_survey_name = self._create_survey("PubTest Private")
         survey_link = self.get_by_xpath('//a[text()="%s"]'%public_survey_name)
-        edit_link = survey_link.find_element_by_xpath('../../td[2]/a[1]')
+        edit_link = survey_link.find_element_by_xpath(CS.XPATH_SURVEY_EDIT_REL)
         edit_link.click()
         
         self.wait.until(

@@ -28,6 +28,8 @@ from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
 USERNAME = 'sebclarke'
 PASSWORD = 'password'
 
+TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
+
 class SurveyTest(unittest.TestCase, selutils.SimpleGetter):
     
     def setUp(self):
@@ -69,7 +71,9 @@ class SurveyTest(unittest.TestCase, selutils.SimpleGetter):
             EC.visibility_of_element_located((By.ID, CS.SURVEY_DATASET_SELECT))
         ).click()
         self.get_by_xpath(CS.SURVEY_TEMPLATE_SELECT).click()
-        self.driver.find_element_by_id('groupName').send_keys('RegUseCaseTest')
+        self.wait.until(
+            EC.visibility_of_element_located((By.ID, CS.METADATA_GROUP_NAME))
+        ).send_keys('RegUseCaseTest')
         self.get_by_xpath(CS.SURVEY_CREATE_BUTTON).click()
         
         # Set up / rename new survey
@@ -95,15 +99,15 @@ class RegisteredUseCase(SurveyTest):
         self._accept_cookie_sign_in()
         survey_name = self._create_survey("RegUseCase Test")
         
-        # Load the survey detail page for our new survey
+        # Load the survey detail page for our new survey, click survey designer
         self.get_by_xpath('//a[text()="%s"]'%survey_name).click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.SURVEY_DETAIL_TITLE))
         )
         self.get_by_xpath(CS.AUTH_TOOL_BUTTON).click()
         
+        # Switch to new window, check title of loaded survey
         self.driver.switch_to_window(self.driver.window_handles[1])
-        # Wait for page and check title
         title = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
         )
@@ -111,11 +115,63 @@ class RegisteredUseCase(SurveyTest):
         
         # Modify the survey - set the first question
         self.get_by_xpath(CS.AT_TITLE_EDIT).click()
-        self.wait.until(
+        text_title = self.wait.until(
             EC.visibility_of_element_located((By.ID, CS.AT_TEXT_TITLE))
-        ).send_keys("Your Name")
-        self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
-        
+        )
+        text_title.clear()
+        text_title.send_keys("Your Name")
+        self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()    
         # Drag and drop a widget
-        # action_chains = ActionChains(driver)
-        # action_chains.drag_and_drop(element, target).perform()
+        drag_from = self.get_by_id(CS.AT_TEXT_CAP_WIDGET)
+        drag_to = self.get_by_id(CS.AT_DROP_AREA)
+        action_chains = ActionChains(self.driver)
+        action_chains.drag_and_drop(drag_from, drag_to).perform()
+        # Change title
+        text_title = self.get_by_selector(CS.SEL_AT_TEXT_TITLE)
+        text_title.clear()
+        text_title.send_keys("Science Value")
+        # and placeholder
+        text_placeholder = self.get_by_id(CS.AT_PLACEHOLDER)
+        text_placeholder.clear()
+        text_placeholder.send_keys("3.14159")
+        self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
+        # Save survey
+        self.get_by_selector(CS.SEL_AT_SAVE_BUTTON).click()
+        # Wait for confirmation and close window
+        self.wait.until(
+            EC.visibility_of_element_located((By.ID, CS.AT_SAVE_CONFIRM))
+        )
+        self.driver.close()
+        
+        # Switch back to main window and logout, login as user
+        self.driver.switch_to_window(self.driver.window_handles[0])
+        self.get_by_selector(CS.SEL_LOGOUT_LINK).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.LOGIN_LINK))
+        ).click()   
+        self.wait.until(EC.visibility_of_element_located((By.ID, 'content')))
+        self.get_by_css(CS.IDP_BUTTON).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, CS.USER_INPUT))
+        ).send_keys(TEST_USER_USERNAME)
+        self.get_by_css(CS.PW_INPUT).send_keys(PASSWORD)
+        self.get_by_css(CS.LOGIN_SUBMIT).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
+        )
+        
+        # Join survey, search for it first
+        self.get_by_selector(CS.SEL_SEARCH_INPUT).send_keys(survey_name)
+        self.get_by_selector(CS.SEL_SEARCH_SUBMIT).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR,
+                                              'a[title="%s"]'%survey_name))
+        ).click()
+        
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.JOIN_LINK))
+        ).click()
+        
+        confirmed_box = self.get_by_selector(CS.SEL_JOINED_CONFIRM)
+        self.assertTrue(confirmed_box.is_displayed())
+        
