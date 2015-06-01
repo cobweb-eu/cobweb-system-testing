@@ -13,7 +13,6 @@ from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
 
 from cobweb_reg_use_case_tests import SurveyTest
 
-# Mark loves ComiCSans
 
 class PublishTests(SurveyTest):
     
