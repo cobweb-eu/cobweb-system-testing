@@ -1,14 +1,17 @@
+import unittest
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-import cobweb_statics as CS # these are all my statics and selectors
+sys.path.append('/home/envsys/src/libenvsys/python')
 
-from cobweb_reg_use_case_tests import TestUtils, SurveyTest
+from envsys.utils.testing.selenium import conditions as ECENV
+from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
 
-import unittest
+from cobweb_reg_use_case_tests import SurveyTest
 
 
 class PublishTests(SurveyTest):
