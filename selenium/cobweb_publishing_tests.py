@@ -6,8 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-sys.path.append('/home/envsys/src/libenvsys/python')
-
 from envsys.utils.testing.selenium import conditions as ECENV
 from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
 from cobweb_reg_use_case_tests import COBWEBSurveyTest
@@ -42,5 +40,3 @@ class PublishTests(COBWEBSurveyTest):
     def test_visible(self):
         self.assertTrue(False)
         
-    def test_public_survey_searchable(self):
-        pass

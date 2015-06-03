@@ -20,10 +20,11 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 from appium import webdriver as appdriver
 
-sys.path.append('/home/envsys/src/libenvsys/python') # for below imports
+#sys.path.append('/home/envsys/src/libenvsys/python') # for below imports
 
 from envsys.utils.testing.selenium import convenience as selutils
 from envsys.utils.testing.selenium import conditions as ECENV
@@ -224,7 +225,7 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         self.long_wait = WebDriverWait(self.driver, 50)
         
     def tearDown(self):
-        self.driver.close()
+        self.driver.quit()
     
     def close_eula_login_sync_surveys(self, username, password):
         # Wait for EULA Dialog - app fully open - then close
@@ -258,15 +259,20 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         self.driver.switch_to_window(cwh)
         
         # Wait for return back to logged in Download page, click Download button
-        self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, CS.APP_SYNC_BUTTON))
-        ).click()
+        try :
+            self.wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, CS.APP_SYNC_BUTTON))
+            ).click()
+        except TimeoutException:
+            self.fail("Log in failed, did not return to app logged in")
         
-        #self.wait.until(EC.visibility_of_element_located((By.ID, "download-popup")))
-    
     def make_observation(self, survey_id, observation_text):
-        # Wait to be returned to capture page, if we arent, survey syncing probably failed
-        self.wait.until(EC.visibility_of_element_located((By.ID, CS.APP_CAP_VIEW)))
+        try :
+            self.wait.until(        # Wait to be returned to capture page
+                EC.visibility_of_element_located((By.ID, CS.APP_CAP_VIEW)))
+        except TimeoutException:    # if we arent, survey syncing probably failed
+            self.fail("Survey syncing (downloading registered surveys) failed")
+            
         # Check if there are some surveys
         found_surveys = self.list_by_css(CS.APP_SURVEY_LINKS)
         
@@ -285,7 +291,6 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         self.driver.find_element_by_css_selector(CS.APP_RECORD_OBS).click()
         
         # Wait for GPS fix warning to appear, then dissappear - or not!
-        
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
         self.long_wait.until(EC.invisibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
         
