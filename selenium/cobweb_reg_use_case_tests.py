@@ -22,16 +22,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
-from appium import webdriver as appdriver
 
 #sys.path.append('/home/envsys/src/libenvsys/python') # for below imports
 
 from envsys.utils.testing.selenium import convenience as selutils
 from envsys.utils.testing.selenium import conditions as ECENV
 from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
-
-USERNAME = 'sebclarke'
-PASSWORD = 'password'
 
 TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
 OBSERVATION_TEXT = '3.5'
@@ -59,7 +55,7 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.COOKIE_ACCEPT))
         ).click()
         
-        self._login_with(USERNAME, PASSWORD)
+        self._login_with(self.USERNAME, self.PASSWORD)
     
     def _create_survey(self, name): 
         # Load metadata editor, configure and create new survey
@@ -170,6 +166,11 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
  
         
 class PortalTests(COBWEBSurveyTest):
+    def setUp(self):
+        self.USERNAME = 'sebclarke'
+        self.PASSWORD = 'password'
+        super(PortalTests, self).setUp()
+    
     def test_login_create_survey(self):
         self._accept_cookie_sign_in()
         survey_name = self._create_survey("RegUseCase Test")
@@ -203,6 +204,7 @@ class PortalTests(COBWEBSurveyTest):
     
 class AppTests(unittest.TestCase, selutils.SimpleGetter):
     def setUp(self):
+        from appium import webdriver as appdriver
         app = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'COBWEB-0.0.7.apk'))
         desired_caps = {
