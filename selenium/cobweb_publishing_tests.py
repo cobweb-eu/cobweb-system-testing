@@ -43,11 +43,12 @@ class PublishTests(COBWEBSurveyTest):
         self.driver.get(CS.LIVE_URL)
         #Access Search Tool
         self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, NAVBAR_SEARCH))
+            EC.visibility_of_element_located((By.XPATH, CS.NAVBAR_SEARCH))
         ).click()
         #Input the title of Public Survey, press search/enter
-        self.wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="gn-any-field"]'))
+        self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(public_survey_name)
+        self.click(By.XPATH, CS.NSEARCH_SUBMIT)
         #If survey is visible, true, if not, false/fail
         
         #Next, test for visibility of the Private Survey. Return to homepage, sign-in as Registered User account
