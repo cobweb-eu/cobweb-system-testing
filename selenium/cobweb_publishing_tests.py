@@ -47,7 +47,7 @@ class PublishTests(COBWEBSurveyTest):
         ).click()
         #Input the title of Public Survey, press search/enter
         self.wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="gn-any-field"]'))
-        ).send_keys(%public_survey_name)
+        ).send_keys(public_survey_name)
         #If survey is visible, true, if not, false/fail
         
         #Next, test for visibility of the Private Survey. Return to homepage, sign-in as Registered User account
