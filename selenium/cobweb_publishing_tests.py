@@ -38,10 +38,13 @@ class PublishTests(COBWEBSurveyTest):
         
         self.get_by_xpath(CS.METADATA_SAVECLOSE_BUTTON).click()
         #Delete cookies to clear login, return to the homepage
+        self.driver.get(CS.LIVE_URL)
         self.driver.delete_all_cookies()
         self.driver.get(CS.LIVE_URL)
         #Access Search Tool
-        
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, NAVBAR_SEARCH))
+        ).click()
         #Input the title of Public Survey, press search/enter
         
         #If survey is visible, true, if not, false/fail
