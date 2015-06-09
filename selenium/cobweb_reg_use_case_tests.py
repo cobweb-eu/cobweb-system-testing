@@ -23,11 +23,12 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 
-#sys.path.append('/home/envsys/src/libenvsys/python') # for below imports
+# you will need to have installed the envsys python module for the below imports
 
 from envsys.utils.testing.selenium import convenience as selutils
 from envsys.utils.testing.selenium import conditions as ECENV
 from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
+from envsys.utils.general.functions import parse_colon_separated_results
 
 TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
 OBSERVATION_TEXT = '3.5'
@@ -35,6 +36,8 @@ OBSERVATION_TEXT = '3.5'
 PLATFORM_VERSION = '4.4'
 
 TEST_SURVEY = "9be11f06-d2ce-414d-81d4-83cf1834395a"
+TEXT_INPUT_TITLE = "Science Value"
+SURVEY_BASE_NAME = "RegUseCase Test"
 
 class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
     
@@ -42,16 +45,18 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
         return self.assertTrue(element.is_displayed())
     
     def setUp(self):
-        self.driver = webdriver.Firefox()
+        if not hasattr(self, 'driver'):
+            self.driver = webdriver.Firefox()
         self.driver.set_window_size(1280, 1024)
         self.wait = WebDriverWait(self.driver, 20)
+        self.long_wait = WebDriverWait(self.driver, 60)
         
     def tearDown(self):
         self.driver.close()
             
     def _accept_cookie_sign_in(self):
         self.driver.get(CS.LIVE_URL)
-        self.wait.until(
+        self.long_wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.COOKIE_ACCEPT))
         ).click()
         
@@ -110,7 +115,7 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
         # Change title
         text_title = self.get_by_selector(CS.SEL_AT_TEXT_TITLE)
         text_title.clear()
-        text_title.send_keys("Science Value")
+        text_title.send_keys(TEXT_INPUT_TITLE)
         # and placeholder
         text_placeholder = self.get_by_id(CS.AT_PLACEHOLDER)
         text_placeholder.clear()
@@ -138,8 +143,9 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.JOIN_LINK))
         ).click()
     
-        confirmed_box = self.get_by_selector(CS.SEL_JOINED_CONFIRM)
-        self.assertTrue(confirmed_box.is_displayed())
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.JOINED_CONFIRM))
+        )
         
         # return the survey_id
         return self.driver.current_url.split('/')[-1]
@@ -164,30 +170,53 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
         )
  
+    def _delete_survey(self, survey_id):
+        self.driver.delete_all_cookies()
+        self.driver.get(CS.LIVE_URL)
+        self._accept_cookie_sign_in()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
+        )
+        self.get_by_css(CS.CREATION_TOOLBOX).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.METADATA_SEARCH_INPUT))
+        ).send_keys(survey_id)
+        self.get_by_xpath(CS.METADATA_SEARCH_GO).click()
+          
+        s_link = self.wait.until(
+            EC.visibility_of_element_located((
+                By.CSS_SELECTOR,
+                'a[data-ng-href="catalog.search#/metadata/%s"]'%survey_id
+            ))
+        )
+        
+        s_link.find_element_by_xpath('../../td[3]/a').click()
+        
         
 class PortalTests(COBWEBSurveyTest):
     def setUp(self):
         self.USERNAME = 'sebclarke'
         self.PASSWORD = 'password'
+        self.driver = webdriver.Chrome()
         super(PortalTests, self).setUp()
     
     def test_login_create_survey(self):
         self._accept_cookie_sign_in()
-        survey_name = self._create_survey("RegUseCase Test")
+        active_survey_name = self._create_survey(SURVEY_BASE_NAME)
         
         # Load the survey detail page for our new survey, click survey designer
-        self.get_by_xpath('//a[text()="%s"]'%survey_name).click()
+        self.get_by_xpath('//a[text()="%s"]'%active_survey_name).click()
         self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.SURVEY_DETAIL_TITLE))
-        )
-        self.get_by_xpath(CS.AUTH_TOOL_BUTTON).click()
+            EC.visibility_of_element_located((By.XPATH, CS.AUTH_TOOL_BUTTON))
+        ).click()
+        
         
         # Switch to new window, check title of loaded survey
         self.driver.switch_to_window(self.driver.window_handles[1])
         title = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
         )
-        self.assertIn(survey_name, title.text)
+        self.assertIn(active_survey_name, title.text)
         
         # Author the survey - add fields etc
         self._author_survey()
@@ -195,12 +224,88 @@ class PortalTests(COBWEBSurveyTest):
         # Switch back to main window and logout, login as test user
         self.driver.switch_to_window(self.driver.window_handles[0])
         self.get_by_selector(CS.SEL_LOGOUT_LINK).click()
-        self._login_with(TEST_USER_USERNAME, PASSWORD)
+        self._login_with(TEST_USER_USERNAME, self.PASSWORD)
     
         # Search and join the survey as test user
         global active_survey_id
-        active_survey_id = self._search_join_survey(survey_name)
+        active_survey_id = self._search_join_survey(active_survey_name)
+       
+    def test_login_check_observations(self):
+        # First check status of previous tests - is there an observation?
+        if 'active_observation_name' not in globals():
+            self.fail("No observation has been made...")
+        elif 'active_survey_id' not in globals():
+            self.fail("No survey has been created...")
+            
+        survey_id = active_survey_id
+        observation_name = active_observation_name
+        
+        # Search for survey and click it
+        self._accept_cookie_sign_in()
+        self.get_by_selector(CS.SEL_SEARCH_INPUT).send_keys(survey_id)
+        self.get_by_selector(CS.SEL_SEARCH_SUBMIT).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR,
+                                              'a[href="#/metadata/%s"]'%survey_id))
+        ).click()
+        
+        # Click in center of minimap once loaded (should have marker)
+        self.driver.switch_to_frame(self.get_by_xpath(CS.IFRAME))
+        minimap = self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, '//*[name()="svg"]')))
     
+        act = ActionChains(self.driver)
+        act.move_to_element(minimap).move_by_offset(0, -5).click().perform()
+            
+        # Look at details popup and check contained values
+        observation_lines = self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.MINIMAP_OBS_DETAILS))
+        ).text.split('\n')
+        obs_details = parse_colon_separated_results(observation_lines)
+        
+        print(observation_lines)
+        print(obs_details)
+        
+        self.assertEqual(obs_details['Name'], observation_name)
+        self.assertEqual(obs_details[TEXT_INPUT_TITLE], OBSERVATION_TEXT)
+        
+        # Try the main map viewer also
+        self.driver.switch_to_default_content()
+
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.VIEW_ON_MAP))
+        ).click()
+        
+        map_canvas = self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.MAP_CANVAS))
+        )
+        
+        self.get_by_xpath(CS.MAP_LAYERS).click()
+        label = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.XPATH, ('//label[contains(.,"%s")]'%SURVEY_BASE_NAME))
+            )
+        )
+        zoom_to_extent = label.find_element_by_xpath('../button[2]')
+        zoom_to_extent.click()
+        self.get_by_xpath(CS.CLOSE_LAYERS).click()
+    
+        # Now click in the center and check the observations
+        act = ActionChains(self.driver)
+        act.move_to_element(map_canvas).click().perform()
+        
+        observation_lines = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.XPATH, CS.MAP_OBS_DETAILS)
+            )
+        ).text.split('\n')
+        
+        obs_details = parse_colon_separated_results(observation_lines)
+        result_name = TEXT_INPUT_TITLE.replace(' ', '_')
+        
+        self.assertEqual(obs_details['Qa_name'], observation_name)
+        self.assertEqual(obs_details[result_name], OBSERVATION_TEXT)
+        
     
 class AppTests(unittest.TestCase, selutils.SimpleGetter):
     def setUp(self):
@@ -225,6 +330,7 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         
         self.wait = WebDriverWait(self.driver, 20)
         self.long_wait = WebDriverWait(self.driver, 50)
+        self.PASSWORD = 'password'
         
     def tearDown(self):
         self.driver.quit()
@@ -283,11 +389,19 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         self.assertIn(survey_id, survey_ids)
         found_surveys[survey_ids.index(survey_id)].click()
         
+        # Name the observation, store as global to check later
+        observation_name = "App%s"%random.randint(0, 99999)
+        global active_observation_name
+        active_observation_name = observation_name
+        
         # Make an observation - use text fields
-        observation_name = "App%s"%random.randint(0, 40000)
-        self.wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, CS.APP_TEXT_OBS_1))
-        ).send_keys(observation_name)
+        try:
+            self.wait.until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, CS.APP_TEXT_OBS_1))
+            ).send_keys(observation_name)
+        except TimeoutException:
+            self.fail("Failed to bring up observation page for survey")    
         text_input = self.get_by_css(CS.APP_TEXT_OBS_2)
         text_input.send_keys(observation_text)
         self.driver.find_element_by_css_selector(CS.APP_RECORD_OBS).click()
@@ -300,15 +414,16 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         self.get_by_id(CS.APP_SAVE_OBS).click()
         
         # Upload observations
-        self.get_by_xpath(CS.APP_LIST_OBS).click()
-        self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.APP_OBS_LIST)))
-        self.get_by_xpath(CS.APP_OBS_UPLOAD).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.APP_LIST_OBS))
+        ).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.APP_OBS_UPLOAD))
+        ).click()
         
         # Wait for confirm box to appear and dissapear
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
-        self.long_wait.until(
-            EC.invisibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
+        from time import sleep
+        sleep(3)
         
         # Check our observation is uploaded
         obs_link = self.get_by_xpath('//a[text()="%s"]'%observation_name)
@@ -317,18 +432,23 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
                       tick_div.get_attribute("class"))
         
     def test_login_make_observation(self):
-        self.close_eula_login_sync_surveys(TEST_USER_USERNAME, PASSWORD)
-        self.make_observation(TEST_SURVEY, OBSERVATION_TEXT)
+        if 'active_survey_id' not in globals():
+            self.fail("No survey has been made/joined")
+            
+        self.close_eula_login_sync_surveys(TEST_USER_USERNAME, self.PASSWORD)
+        self.make_observation(active_survey_id, OBSERVATION_TEXT)
         
         
 def suite():
     suite = unittest.TestSuite()
-    #suite.addTest(PortalTests('test_login_create_survey'))
+    suite.addTest(PortalTests('test_login_create_survey'))
     suite.addTest(AppTests('test_login_make_observation'))
+    suite.addTest(PortalTests('test_login_check_observations'))
     return suite
     
 def load_tests(loader, standard_tests, pattern):
     return suite()
+
 
 if __name__ == '__main__':
     unittest.main()
