@@ -15,6 +15,7 @@ import datetime
 import random
 import sys
 import os
+from time import sleep
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -65,9 +66,8 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
     def _create_survey(self, name): 
         # Load metadata editor, configure and create new survey
         self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
-        )
-        self.get_by_css(CS.CREATION_TOOLBOX).click()
+            EC.visibility_of_element_located((By.CSS_SELECTOR, CS.CREATION_TOOLBOX))
+        ).click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.ADD_CONTENT_BUTTON))
         ).click()
@@ -133,19 +133,23 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
     def _search_join_survey(self, survey_name):
         # Join survey, search for it first
         self.get_by_selector(CS.SEL_SEARCH_INPUT).send_keys(survey_name)
+        sleep(1)
         self.get_by_selector(CS.SEL_SEARCH_SUBMIT).click()
         self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR,
                                               'a[title="%s"]'%survey_name))
         ).click()
         
-        self.wait.until(
+        join_link = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.JOIN_LINK))
-        ).click()
-    
+        )
+        sleep(3)
+        join_link.click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.JOINED_CONFIRM))
         )
+        
+        sleep(3)
         
         # return the survey_id
         return self.driver.current_url.split('/')[-1]
@@ -236,7 +240,7 @@ class PortalTests(COBWEBSurveyTest):
             self.fail("No observation has been made...")
         elif 'active_survey_id' not in globals():
             self.fail("No survey has been created...")
-            
+
         survey_id = active_survey_id
         observation_name = active_observation_name
         
@@ -262,9 +266,6 @@ class PortalTests(COBWEBSurveyTest):
             EC.visibility_of_element_located((By.XPATH, CS.MINIMAP_OBS_DETAILS))
         ).text.split('\n')
         obs_details = parse_colon_separated_results(observation_lines)
-        
-        print(observation_lines)
-        print(obs_details)
         
         self.assertEqual(obs_details['Name'], observation_name)
         self.assertEqual(obs_details[TEXT_INPUT_TITLE], OBSERVATION_TEXT)
@@ -301,7 +302,8 @@ class PortalTests(COBWEBSurveyTest):
         ).text.split('\n')
         
         obs_details = parse_colon_separated_results(observation_lines)
-        result_name = TEXT_INPUT_TITLE.replace(' ', '_')
+        result_words = [val.lower() if i > 0 else val for i, val in enumerate(TEXT_INPUT_TITLE.split(' '))]
+        result_name = '_'.join(result_words)
         
         self.assertEqual(obs_details['Qa_name'], observation_name)
         self.assertEqual(obs_details[result_name], OBSERVATION_TEXT)
@@ -386,7 +388,7 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         
         # Find and click our survey
         survey_ids = [el.get_attribute("data-editor-type") for el in found_surveys]
-        self.assertIn(survey_id, survey_ids)
+        self.assertIn(survey_id, survey_ids, "Survey not in synced list")
         found_surveys[survey_ids.index(survey_id)].click()
         
         # Name the observation, store as global to check later
@@ -422,7 +424,6 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         ).click()
         
         # Wait for confirm box to appear and dissapear
-        from time import sleep
         sleep(3)
         
         # Check our observation is uploaded
@@ -434,7 +435,7 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
     def test_login_make_observation(self):
         if 'active_survey_id' not in globals():
             self.fail("No survey has been made/joined")
-            
+        
         self.close_eula_login_sync_surveys(TEST_USER_USERNAME, self.PASSWORD)
         self.make_observation(active_survey_id, OBSERVATION_TEXT)
         
