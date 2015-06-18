@@ -28,17 +28,24 @@ from selenium.webdriver import ActionChains
 
 from envsys.utils.testing.selenium import convenience as selutils
 from envsys.utils.testing.selenium import conditions as ECENV
-from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
+from envsys.utils.testing.cobweb.structures import Survey
+from envsys.utils.testing.cobweb import cobweb_statics as CS
 from envsys.utils.general.functions import parse_colon_separated_results
 
-TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
-OBSERVATION_TEXT = '3.5'
+# Statics for testing individual sub-tests (with pre-existing surveys/obs)
 
-PLATFORM_VERSION = '4.4'
+TEST_SURVEY_ID = "33754d35-9df0-422b-ac5c-14078eee45f6"
+TEST_SURVEY_NAME = "RegUseCase Test 2015-06-18 12:01:01.939211"
+TEST_OBSERVATION_NAME = ""
+TESTING = True # Set to true to test individual sub-tests
 
-TEST_SURVEY = "9be11f06-d2ce-414d-81d4-83cf1834395a"
+# Statics for configuring input params
+
 TEXT_INPUT_TITLE = "Science Value"
 SURVEY_BASE_NAME = "RegUseCase Test"
+TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
+OBSERVATION_TEXT = '3.5'
+PLATFORM_VERSION = '4.4'
 
 class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
     
@@ -62,8 +69,20 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
         ).click()
         
         self._login_with(self.USERNAME, self.PASSWORD)
+        
+    def _logout(self):
+        self.driver.get(CS.PRIV_URL)
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
+        ).click()
     
-    def _create_survey(self, name): 
+    def _create_survey(self, name):
+        """ Create a new survey using name parameter as base
+        
+            Appends the date-time to the name, and returns a
+            Survey object with name and id attributes representing
+            the newly created survey in COBWEB
+        """
         # Load metadata editor, configure and create new survey
         self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, CS.CREATION_TOOLBOX))
@@ -91,14 +110,29 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
         abstract_input.clear()
         abstract_input.send_keys(CS.SURVEY_ABSTRACT)
         self.get_by_xpath(CS.METADATA_SAVECLOSE_BUTTON).click()
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.SURVEY_LIST_AREA))
+        survey_link = self.wait.until(
+            EC.visibility_of_element_located((
+                By.XPATH, '//a[text()="%s"]'%survey_name
+            ))
         )
-        
-        return survey_name
+        return Survey(survey_link.get_attribute('href').split('/')[-1], survey_name)
     
-    def _author_survey(self):
-         # Modify the survey - set the first question
+    def _author_survey(self, survey):
+        # First go to the survey page
+        self.driver.get(CS.SURVEY_DETAIL_URL + survey.id)
+        # Load the survey detail page for our new survey, click survey designer
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.AUTH_TOOL_BUTTON))
+        ).click()
+        
+        # Switch to new window, check title of loaded survey
+        self.driver.switch_to_window(self.driver.window_handles[1])
+        title = self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
+        )
+        self.assertIn(survey.name, title.text)
+        
+        # Modify the survey - set the first question
         self.get_by_xpath(CS.AT_TITLE_EDIT).click()
         text_title = self.wait.until(
             EC.visibility_of_element_located((By.ID, CS.AT_TEXT_TITLE))
@@ -130,29 +164,17 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
         )
         self.driver.close()
 
-    def _search_join_survey(self, survey_name):
-        # Join survey, search for it first
-        self.get_by_selector(CS.SEL_SEARCH_INPUT).send_keys(survey_name)
-        sleep(1)
-        self.get_by_selector(CS.SEL_SEARCH_SUBMIT).click()
-        self.wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR,
-                                              'a[title="%s"]'%survey_name))
-        ).click()
-        
+    def _join_survey(self, survey):
+        # Join survey, no need to search, just go straight to it
+        self.driver.get(CS.SURVEY_DETAIL_URL + survey.id)
         join_link = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.JOIN_LINK))
         )
-        sleep(3)
         join_link.click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.JOINED_CONFIRM))
         )
         
-        sleep(3)
-        
-        # return the survey_id
-        return self.driver.current_url.split('/')[-1]
     
     def _login_with(self, username, password):
         # Perform login, click login link, choose COBWEB IdP
@@ -174,27 +196,47 @@ class COBWEBSurveyTest(unittest.TestCase, selutils.SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
         )
  
-    def _delete_survey(self, survey_id):
+    def _delete_survey(self, survey):
         self.driver.delete_all_cookies()
         self.driver.get(CS.LIVE_URL)
         self._accept_cookie_sign_in()
         self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
-        )
-        self.get_by_css(CS.CREATION_TOOLBOX).click()
+            EC.visibility_of_element_located((By.CSS_SELECTOR, CS.CREATION_TOOLBOX))
+        ).click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.METADATA_SEARCH_INPUT))
-        ).send_keys(survey_id)
+        ).send_keys(survey.id)
         self.get_by_xpath(CS.METADATA_SEARCH_GO).click()
           
         s_link = self.wait.until(
             EC.visibility_of_element_located((
                 By.CSS_SELECTOR,
-                'a[data-ng-href="catalog.search#/metadata/%s"]'%survey_id
+                'a[data-ng-href="catalog.search#/metadata/%s"]'%survey.id
             ))
         )
         
         s_link.find_element_by_xpath('../../td[3]/a').click()
+        
+    def _publish_survey(self, survey):
+        self.driver.get(CS.CREATION_TOOLBOX_URL)
+        survey_link = self.wait.until(
+            EC.visibility_of_element_located((By.XPATH,
+                                              '//a[text()="%s"]'%survey.name))
+        )
+        survey_link.find_element_by_xpath(CS.XPATH_SURVEY_EDIT_REL).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.METADATA_BOUNDBOX))
+        )
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.PUBLISH_BUTTON))
+        ).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.UNPUBLISH_BUTTON))
+        )
+        self.get_by_xpath(CS.METADATA_SAVECLOSE_BUTTON).click()
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.SURVEY_LIST_AREA))
+        )
         
         
 class PortalTests(COBWEBSurveyTest):
@@ -206,24 +248,10 @@ class PortalTests(COBWEBSurveyTest):
     
     def test_login_create_survey(self):
         self._accept_cookie_sign_in()
-        active_survey_name = self._create_survey(SURVEY_BASE_NAME)
-        
-        # Load the survey detail page for our new survey, click survey designer
-        self.get_by_xpath('//a[text()="%s"]'%active_survey_name).click()
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.AUTH_TOOL_BUTTON))
-        ).click()
-        
-        
-        # Switch to new window, check title of loaded survey
-        self.driver.switch_to_window(self.driver.window_handles[1])
-        title = self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
-        )
-        self.assertIn(active_survey_name, title.text)
+        my_survey = self._create_survey(SURVEY_BASE_NAME)
         
         # Author the survey - add fields etc
-        self._author_survey()
+        self._author_survey(my_survey)
         
         # Switch back to main window and logout, login as test user
         self.driver.switch_to_window(self.driver.window_handles[0])
@@ -231,17 +259,19 @@ class PortalTests(COBWEBSurveyTest):
         self._login_with(TEST_USER_USERNAME, self.PASSWORD)
     
         # Search and join the survey as test user
-        global active_survey_id
-        active_survey_id = self._search_join_survey(active_survey_name)
+        global active_survey
+        active_survey = my_survey
+        self._join_survey(active_survey)
        
     def test_login_check_observations(self):
         # First check status of previous tests - is there an observation?
         if 'active_observation_name' not in globals():
             self.fail("No observation has been made...")
-        elif 'active_survey_id' not in globals():
+        elif 'active_survey' not in globals():
             self.fail("No survey has been created...")
 
-        survey_id = active_survey_id
+        survey_id = active_survey.id
+        
         observation_name = active_observation_name
         
         # Search for survey and click it
@@ -376,7 +406,7 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
         except TimeoutException:
             self.fail("Log in failed, did not return to app logged in")
         
-    def make_observation(self, survey_id, observation_text):
+    def make_observation(self, survey, observation_text):
         try :
             self.wait.until(        # Wait to be returned to capture page
                 EC.visibility_of_element_located((By.ID, CS.APP_CAP_VIEW)))
@@ -385,11 +415,10 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
             
         # Check if there are some surveys
         found_surveys = self.list_by_css(CS.APP_SURVEY_LINKS)
-        
         # Find and click our survey
         survey_ids = [el.get_attribute("data-editor-type") for el in found_surveys]
-        self.assertIn(survey_id, survey_ids, "Survey not in synced list")
-        found_surveys[survey_ids.index(survey_id)].click()
+        self.assertIn(survey.id, survey_ids, "Survey not in synced list")
+        found_surveys[survey_ids.index(survey.id)].click()
         
         # Name the observation, store as global to check later
         observation_name = "App%s"%random.randint(0, 99999)
@@ -433,18 +462,33 @@ class AppTests(unittest.TestCase, selutils.SimpleGetter):
                       tick_div.get_attribute("class"))
         
     def test_login_make_observation(self):
-        if 'active_survey_id' not in globals():
+        if 'active_survey' not in globals():
             self.fail("No survey has been made/joined")
         
         self.close_eula_login_sync_surveys(TEST_USER_USERNAME, self.PASSWORD)
-        self.make_observation(active_survey_id, OBSERVATION_TEXT)
+        self.make_observation(active_survey, OBSERVATION_TEXT)
         
         
 def suite():
+    """ Define what tests to run and the order in
+        which they shall be executed for this test
+    """
     suite = unittest.TestSuite()
-    suite.addTest(PortalTests('test_login_create_survey'))
+    if(TESTING):
+        global active_survey
+        global active_observation_name
+        active_survey = Survey(TEST_SURVEY_ID, TEST_SURVEY_NAME)
+        active_observation_name = TEST_OBSERVATION_NAME
+        
+    # First, add the test for logging in and creating/joining a survey
+    #suite.addTest(PortalTests('test_login_create_survey'))
+    
+    # Next, on the app, do the logging in and making observation test
     suite.addTest(AppTests('test_login_make_observation'))
+    
+    # Finally, do the portal test of viewing the observation
     suite.addTest(PortalTests('test_login_check_observations'))
+    
     return suite
     
 def load_tests(loader, standard_tests, pattern):
