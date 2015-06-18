@@ -37,7 +37,7 @@ from envsys.utils.general.functions import parse_colon_separated_results
 TEST_SURVEY_ID = "33754d35-9df0-422b-ac5c-14078eee45f6"
 TEST_SURVEY_NAME = "RegUseCase Test 2015-06-18 12:01:01.939211"
 TEST_OBSERVATION_NAME = ""
-TESTING = True # Set to true to test individual sub-tests
+TESTING = False # Set to true to test individual sub-tests
 
 # Statics for configuring input params
 
@@ -481,7 +481,7 @@ def suite():
         active_observation_name = TEST_OBSERVATION_NAME
         
     # First, add the test for logging in and creating/joining a survey
-    #suite.addTest(PortalTests('test_login_create_survey'))
+    suite.addTest(PortalTests('test_login_create_survey'))
     
     # Next, on the app, do the logging in and making observation test
     suite.addTest(AppTests('test_login_make_observation'))
