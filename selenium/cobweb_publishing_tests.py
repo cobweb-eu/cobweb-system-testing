@@ -4,19 +4,18 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
-from envsys.utils.testing.selenium import conditions as ECENV
-from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
+from envsys.testing.selenium import conditions as ECENV
+from envsys.testing.selenium.cobweb import cobweb_statics as CS
 from cobweb_reg_use_case_tests import COBWEBSurveyTest
-
-from time import sleep
 
 class PublishTests(COBWEBSurveyTest):
     
     def setUp(self):
-        self.driver = webdriver.Chrome('C:\Users\Admin.ENVSYS-704\Desktop\Extra\chromedriver_win32\chromedriver.exe')
-        """self.driver = webdriver.Firefox()"""
+        """self.driver = webdriver.Chrome('C:\Users\Admin.ENVSYS-704\Desktop\Extra\chromedriver_win32\chromedriver.exe')"""
+        self.driver = webdriver.Firefox()
         self.driver.set_window_size(1280, 1024)
         self.wait = WebDriverWait(self.driver, 20)
         self.long_wait = WebDriverWait(self.driver, 50)
@@ -43,21 +42,14 @@ class PublishTests(COBWEBSurveyTest):
             EC.visibility_of_element_located((By.XPATH, CS.SURVEY_LIST_AREA))
         )
     def tearDown(self):
-        """self._delete_survey(self.private_survey_name)
-        self._delete_survey(self.public_survey_name)"""
+        self._delete_survey(self.private_survey_name)
+        self._delete_survey(self.public_survey_name)
         
         self.driver.close()
         
     def test_visible(self):
-        # Return to the homepage, logout. Sleep to allow publication to occur.
-        self.driver.get(CS.PRIV_URL)
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
-        ).click()
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.LOGIN_LINK))
-        )
-        """sleep(30)"""
+        # Delete cookies to clear login, return to the homepage
+        self.driver.get(CS.LIVE_URL)
         # Access Search Tool
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.NAVBAR_SEARCH))
@@ -66,39 +58,42 @@ class PublishTests(COBWEBSurveyTest):
         self.driver.refresh()
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(self.public_survey_name)
-        #self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
-        self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
-        ).send_keys(Keys.RETURN)
+        self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
         # If survey is visible, true, if not, false/fail
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, '//a[contains(., "%s")]'%self.public_survey_name))
-        )
+        
+        try:
+            self.wait.until(
+                EC.visibility_of_element_located((By.XPATH, '//a[contains(., "%s")]'%self.public_survey_name))
+            )
+        except TimeoutException:
+            self.fail("Did not find survey in search")
+            
         # Check private survey is not shown!
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_CLEAR))
         ).click()
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(self.private_survey_name)
-        #self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
-        self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
-        ).send_keys(Keys.RETURN)
+        self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
+        
+        # YOU NEED A SELF.WAIT.UNTIL to not do any more processing until search
+        # results are returned
+        
         matching_survey_links = self.list_by_xpath('//a[contains(., "%s")]'%self.private_survey_name)
         self.assertEqual(len(matching_survey_links), 0, 'Private survey visible when not logged in!')
         
         # Next, test for visibility of the Private Survey. Return to homepage, sign-in as Registered User account
-        self.driver.get(CS.LIVE_URL)
+        self.driver.get(CS.PRIV_URL)
+        self.wait.until(
+            EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
+        ).click()
         self.USERNAME = "PublishTester1"
         self.PASSWORD = "password"
         self._login_with(self.USERNAME, self.PASSWORD)
         # Return to search tool, input Private Survey title into search bar, press search/enter
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.NAVBAR_SEARCH))
-        ).click()
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(self.private_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
-        sleep(10)
-        matching_survey_links = self.list_by_xpath('//a[contains(., "%s")]'%self.private_survey_name)
         self.assertEqual(len(matching_survey_links), 1, 'Private survey NOT visible when logged in!')
         
         # If survey is visible, true, if not false/fail. Portal end of test is complete.
