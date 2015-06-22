@@ -4,10 +4,11 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
-from envsys.utils.testing.selenium import conditions as ECENV
-from envsys.utils.testing.selenium.cobweb import cobweb_statics as CS
+from envsys.testing.selenium import conditions as ECENV
+from envsys.testing.selenium.cobweb import cobweb_statics as CS
 from cobweb_reg_use_case_tests import COBWEBSurveyTest
 
 class PublishTests(COBWEBSurveyTest):
@@ -59,9 +60,14 @@ class PublishTests(COBWEBSurveyTest):
         ).send_keys(self.public_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
         # If survey is visible, true, if not, false/fail
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, '//a[contains(., "%s")]'%self.public_survey_name))
-        )
+        
+        try:
+            self.wait.until(
+                EC.visibility_of_element_located((By.XPATH, '//a[contains(., "%s")]'%self.public_survey_name))
+            )
+        except TimeoutException:
+            self.fail("Did not find survey in search")
+            
         # Check private survey is not shown!
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_CLEAR))
@@ -69,6 +75,10 @@ class PublishTests(COBWEBSurveyTest):
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(self.private_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
+        
+        # YOU NEED A SELF.WAIT.UNTIL to not do any more processing until search
+        # results are returned
+        
         matching_survey_links = self.list_by_xpath('//a[contains(., "%s")]'%self.private_survey_name)
         self.assertEqual(len(matching_survey_links), 0, 'Private survey visible when not logged in!')
         

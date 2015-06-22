@@ -24,8 +24,6 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 
-# you will need to have installed the envsys python module for the below imports
-
 from envsys.testing.selutils import conditions as ECENV
 from envsys.testing.cobweb import cobweb_statics as CS
 from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
@@ -41,10 +39,9 @@ TESTING = False # Set to true to test individual sub-tests
 
 # Statics for configuring input params
 
-TEXT_INPUT_TITLE = "Science Value"
 SURVEY_BASE_NAME = "RegUseCase Test"
 TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
-OBSERVATION_TEXT = '3.5'
+
 
 class PortalTests(SurveyHelper):
     """ Class containing the tests for the portal side
@@ -100,37 +97,8 @@ class PortalTests(SurveyHelper):
             
         # Login (as coord) and go to the survey detail page
         self._accept_cookie_sign_in()
-        self.driver.get(CS.SURVEY_DETAIL_URL + active_survey.id)
         
-        # Wait for detail page to load and switch context to the iframe...
-        self.driver.switch_to_frame(
-            self.wait.until(
-                EC.visibility_of_element_located((By.XPATH, CS.IFRAME))
-            )
-        )
-        
-        # Wait for the minimap to load in the iframe
-        minimap = self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, '//*[name()="svg"]'))
-        )
-        
-        # Set up and execute an action chain to click just above the center
-        # This should be somewhere within the marker (displayed centered)
-        act = ActionChains(self.driver)
-        act.move_to_element(minimap).move_by_offset(0, -5).click().perform()
-            
-        # Look at details popup and check contained values
-        # Use convenience function to parse the results into a dict
-        obs_details = parse_colon_separated_results(
-            self.wait.until(
-                EC.visibility_of_element_located(
-                    (By.XPATH, CS.MINIMAP_OBS_DETAILS)
-                )
-            ).text.split('\n')
-        )
-        
-        self.assertEqual(obs_details['Name'], active_observation_name)
-        self.assertEqual(obs_details[TEXT_INPUT_TITLE], OBSERVATION_TEXT)
+        self._check_observation_minimap()
         
         # Now try the main map viewer also
         # Click the view on map link and wait for the map canvas
@@ -167,14 +135,12 @@ class PortalTests(SurveyHelper):
         )
         
         # Fieldname is title, lowercase, with spaces replaced for '_'
-        result_name = '_'.join(
-            [val.lower() if i > 0 else val
-             for i, val
-             in enumerate(TEXT_INPUT_TITLE.split(' '))]
-        )
+        result_name = '_'.join([val.lower() if i > 0 else val
+                                for i, val
+                                in enumerate(CS.TEXT_INPUT_TITLE.split(' '))])
         
         self.assertEqual(obs_details['Qa_name'], active_observation_name)
-        self.assertEqual(obs_details[result_name], OBSERVATION_TEXT)
+        self.assertEqual(obs_details[result_name], CS.OBSERVATION_TEXT)
   
         
 class AppTests(AppHelper):
@@ -192,7 +158,7 @@ class AppTests(AppHelper):
         
         self.close_eula_login_sync_surveys(TEST_USER_USERNAME, self.PASSWORD)
         global active_observation_name
-        active_observation_name = self.make_observation(active_survey, OBSERVATION_TEXT)    
+        active_observation_name = self.make_observation(active_survey, CS.OBSERVATION_TEXT)    
           
               
 # Unit test boot strapping stuff, manages the whole process
