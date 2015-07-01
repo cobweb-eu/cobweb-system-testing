@@ -39,7 +39,9 @@ TESTING = False # Set to true to test individual sub-tests
 
 # Statics for configuring input params
 
-SURVEY_BASE_NAME = "RegUseCase Test"
+SURVEY_BASE_NAME = 'RegUseCase Test'
+SURVEY_GROUP_NAME = 'RegUseCaseTest'
+SURVEY_ABSTRACT = 'Auto-created test survey from Registered Use Case auto system test'
 TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
 
 
@@ -67,7 +69,7 @@ class PortalTests(SurveyHelper):
             that they exist later
         """
         self._accept_cookie_sign_in()
-        my_survey = self._create_survey(SURVEY_BASE_NAME)
+        my_survey = self._create_survey(SURVEY_BASE_NAME, SURVEY_GROUP_NAME, SURVEY_ABSTRACT)
         
         # Author the survey - add fields etc
         self._author_survey(my_survey)
