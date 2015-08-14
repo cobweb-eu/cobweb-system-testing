@@ -11,10 +11,13 @@
 """
 import logging
 import unittest
+import xmlrunner
 import datetime
 import random
 import sys
+import ssl
 import os
+
 from time import sleep
 
 from selenium import webdriver
@@ -27,22 +30,24 @@ from selenium.webdriver import ActionChains
 from envsys.testing.selutils import conditions as ECENV
 from envsys.testing.cobweb import cobweb_statics as CS
 from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
-from envsys.testing.cobweb.structures import Survey
+from envsys.testing.cobweb import convert_from_friendly_name
+from envsys.testing.cobweb import Survey
 from envsys.general.functions import parse_colon_separated_results
 
 # Statics for testing individual sub-tests (with pre-existing surveys/obs)
 
-TEST_SURVEY_ID = "33754d35-9df0-422b-ac5c-14078eee45f6"
-TEST_SURVEY_NAME = "RegUseCase Test 2015-06-18 12:01:01.939211"
+TEST_SURVEY_ID = "3dfa716c-b2f9-43bf-af87-0bf4b69c7ec5"
+TEST_SURVEY_NAME = "SyncTest 2015-07-08 10:49:27.765980"
 TEST_OBSERVATION_NAME = ""
+
 TESTING = False # Set to true to test individual sub-tests
+SSL_VERIFY = True # Set to False to disable SSL verification globally
+MAIN_MAP_SHOULD_BE_CHECKED = False
 
 # Statics for configuring input params
 
-SURVEY_BASE_NAME = 'RegUseCase Test'
-SURVEY_GROUP_NAME = 'RegUseCaseTest'
-SURVEY_ABSTRACT = 'Auto-created test survey from Registered Use Case auto system test'
-TEST_USER_USERNAME = 'AutoIntegrationTestUser1'
+SURVEY_BASE_NAME = "SyncTest"
+TEST_USER_USERNAME = 'UserSystemTestUser2'
 
 
 class PortalTests(SurveyHelper):
@@ -60,6 +65,14 @@ class PortalTests(SurveyHelper):
         self.PASSWORD = 'password'
         self.driver = webdriver.Chrome()
         super(PortalTests, self).setUp()
+        
+    def _check_observation_minimap(self):
+        """ Checks that an observation is visible through the portal
+            
+            Private implementation that uses the the global active observation
+            with the public function that parameterised function
+        """
+        self.check_observation_minimap(active_survey, active_observation_name)
     
     def test_login_create_survey(self):
         """ Test that we can login, create and join a survey
@@ -69,7 +82,7 @@ class PortalTests(SurveyHelper):
             that they exist later
         """
         self._accept_cookie_sign_in()
-        my_survey = self._create_survey(SURVEY_BASE_NAME, SURVEY_GROUP_NAME, SURVEY_ABSTRACT)
+        my_survey = self._create_survey(SURVEY_BASE_NAME)
         
         # Author the survey - add fields etc
         self._author_survey(my_survey)
@@ -104,45 +117,48 @@ class PortalTests(SurveyHelper):
         
         # Now try the main map viewer also
         # Click the view on map link and wait for the map canvas
-        self.driver.switch_to_default_content()
-        self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.VIEW_ON_MAP))
-        ).click()
-        
-        map_canvas = self.wait.until(
-            EC.visibility_of_element_located((By.XPATH, CS.MAP_CANVAS))
-        )
-        
-        # Click the layers, find the survey and zoom to layer
-        self.get_by_xpath(CS.MAP_LAYERS).click()
-        label = self.wait.until(
-            EC.visibility_of_element_located(
-                (By.XPATH, ('//label[contains(.,"%s")]'%SURVEY_BASE_NAME))
+        # We can ignore this for now as the main viewer is disabled
+        if(MAIN_MAP_SHOULD_BE_CHECKED):
+            self.driver.switch_to_default_content()
+            try:
+                self.wait.until(
+                    EC.visibility_of_element_located((By.XPATH, CS.VIEW_ON_MAP))
+                ).click()
+            except TimeoutException:
+                self.fail("No view on map button for survey")
+            
+            map_canvas = self.wait.until(
+                EC.visibility_of_element_located((By.XPATH, CS.MAP_CANVAS))
             )
-        )
-        zoom_to_extent = label.find_element_by_xpath('../button[2]')
-        zoom_to_extent.click()
-        self.get_by_xpath(CS.CLOSE_LAYERS).click()
-    
-        # Now click in the center and check the observations
-        act = ActionChains(self.driver)
-        act.move_to_element(map_canvas).click().perform()
-    
-        obs_details = parse_colon_separated_results(
-            self.wait.until(
+            
+            # Click the layers, find the survey and zoom to layer
+            self.get_by_xpath(CS.MAP_LAYERS).click()
+            label = self.wait.until(
                 EC.visibility_of_element_located(
-                    (By.XPATH, CS.MAP_OBS_DETAILS)
+                    (By.XPATH, ('//label[contains(.,"%s")]'%SURVEY_BASE_NAME))
                 )
-            ).text.split('\n')
-        )
+            )
+            zoom_to_extent = label.find_element_by_xpath('../button[2]')
+            zoom_to_extent.click()
+            self.get_by_xpath(CS.CLOSE_LAYERS).click()
         
-        # Fieldname is title, lowercase, with spaces replaced for '_'
-        result_name = '_'.join([val.lower() if i > 0 else val
-                                for i, val
-                                in enumerate(CS.TEXT_INPUT_TITLE.split(' '))])
+            # Now click in the center and check the observations
+            act = ActionChains(self.driver)
+            act.move_to_element(map_canvas).click().perform()
         
-        self.assertEqual(obs_details['Qa_name'], active_observation_name)
-        self.assertEqual(obs_details[result_name], CS.OBSERVATION_TEXT)
+            obs_details = parse_colon_separated_results(
+                self.wait.until(
+                    EC.visibility_of_element_located(
+                        (By.XPATH, CS.MAP_OBS_DETAILS)
+                    )
+                ).text.split('\n')
+            )
+            
+            # Fieldname is title, lowercase, with spaces replaced for '_'
+            result_name = convert_from_friendly_name(CS.TEXT_INPUT_TITLE)
+            
+            self.assertEqual(obs_details['Qa_name'], active_observation_name)
+            self.assertEqual(obs_details[result_name], CS.OBSERVATION_TEXT)
   
         
 class AppTests(AppHelper):
@@ -157,8 +173,7 @@ class AppTests(AppHelper):
     def test_login_make_observation(self):
         if 'active_survey' not in globals():
             self.fail("No survey has been made/joined")
-        
-        self.close_eula_login_sync_surveys(TEST_USER_USERNAME, self.PASSWORD)
+        self.close_eula_login_sync_surveys(TEST_USER_USERNAME, "password")
         global active_observation_name
         active_observation_name = self.make_observation(active_survey, CS.OBSERVATION_TEXT)    
           
@@ -192,4 +207,15 @@ def load_tests(loader, standard_tests, pattern):
     return suite()
 
 if __name__ == '__main__':
-    unittest.main()
+    if not SSL_VERIFY:
+        try:
+            _create_unverified_https_context = ssl._create_unverified_context
+        except AttributeError:
+            # Legacy Python that doesn't verify HTTPS certificates by default
+            pass
+        else:
+            # Handle target environment that doesn't support HTTPS verification
+            ssl._create_default_https_context = _create_unverified_https_context
+            
+    unittest.main(testRunner=xmlrunner.XMLTestRunner(output='/tmp/test-reports'))
+
