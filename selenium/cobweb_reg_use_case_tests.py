@@ -9,25 +9,18 @@
     than checking every part of the portal on the way functions correctly.
     These checks will be covered by separate tests...
 """
-import logging
+
 import unittest
 import xmlrunner
-import datetime
-import random
-import sys
 import ssl
-import os
-
-from time import sleep
+import logging
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 
-from envsys.testing.selutils import conditions as ECENV
 from envsys.testing.cobweb import cobweb_statics as CS
 from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
 from envsys.testing.cobweb import convert_from_friendly_name
@@ -47,8 +40,9 @@ MAIN_MAP_SHOULD_BE_CHECKED = False
 # Statics for configuring input params
 
 SURVEY_BASE_NAME = "SyncTest"
-TEST_USER_USERNAME = 'UserSystemTestUser2'
+TEST_USER_USERNAME = 'testuser21'
 
+logging.basicConfig(filename="./test.log", level=logging.DEBUG)
 
 class PortalTests(SurveyHelper):
     """ Class containing the tests for the portal side
@@ -88,15 +82,18 @@ class PortalTests(SurveyHelper):
         self._author_survey(my_survey)
         
         # Switch back to main window and logout, login as test user
-        self.driver.switch_to_window(self.driver.window_handles[0])
-        self.get_by_xpath(CS.LOGOUT_LINK).click()
+        self.driver.switch_to.window(self.driver.window_handles[0])
+        self._logout()
         self._login_with(TEST_USER_USERNAME, self.PASSWORD)
     
         # Search and join the survey as test user
         global active_survey
         active_survey = my_survey
         self._join_survey(active_survey)
-       
+
+
+    #@unittest.skipIf('active_observation_name' not in globals() or 'active_survey' not in globals(),
+     #                "Skipping due to lack of existing observation or survey")
     def test_login_check_observations(self):
         """ Test that we can login and see an observation
             
@@ -119,7 +116,7 @@ class PortalTests(SurveyHelper):
         # Click the view on map link and wait for the map canvas
         # We can ignore this for now as the main viewer is disabled
         if(MAIN_MAP_SHOULD_BE_CHECKED):
-            self.driver.switch_to_default_content()
+            self.driver.switch_to.default_content()
             try:
                 self.wait.until(
                     EC.visibility_of_element_located((By.XPATH, CS.VIEW_ON_MAP))
