@@ -21,11 +21,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 
-from envsys.testing.cobweb import cobweb_statics as CS
-from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
-from envsys.testing.cobweb import convert_from_friendly_name
-from envsys.testing.cobweb import Survey
-from envsys.general.functions import parse_colon_separated_results
+from utils import statics as CS
+from utils import helpers, parse_observation, Survey
 
 # Statics for testing individual sub-tests (with pre-existing surveys/obs)
 
@@ -44,7 +41,7 @@ TEST_USER_USERNAME = 'testuser21'
 
 logging.basicConfig(filename="./test.log", level=logging.DEBUG)
 
-class PortalTests(SurveyHelper):
+class PortalTests(helpers.SurveyHelper):
     """ Class containing the tests for the portal side
         of registered user use-case testing
         
@@ -93,7 +90,7 @@ class PortalTests(SurveyHelper):
 
 
     #@unittest.skipIf('active_observation_name' not in globals() or 'active_survey' not in globals(),
-     #                "Skipping due to lack of existing observation or survey")
+    #                "Skipping due to lack of existing observation or survey")
     def test_login_check_observations(self):
         """ Test that we can login and see an observation
             
@@ -143,7 +140,7 @@ class PortalTests(SurveyHelper):
             act = ActionChains(self.driver)
             act.move_to_element(map_canvas).click().perform()
         
-            obs_details = parse_colon_separated_results(
+            obs_details = parse_observation(
                 self.wait.until(
                     EC.visibility_of_element_located(
                         (By.XPATH, CS.MAP_OBS_DETAILS)
@@ -152,13 +149,13 @@ class PortalTests(SurveyHelper):
             )
             
             # Fieldname is title, lowercase, with spaces replaced for '_'
-            result_name = convert_from_friendly_name(CS.TEXT_INPUT_TITLE)
+            result_name = CS.TEXT_INPUT_TITLE.replace(' ', '_')
             
             self.assertEqual(obs_details['Qa_name'], active_observation_name)
             self.assertEqual(obs_details[result_name], CS.OBSERVATION_TEXT)
   
         
-class AppTests(AppHelper):
+class AppTests(helpers.AppHelper):
     """ The tests on the App side of COBWEB for the
         registered user use case testing
         
@@ -199,7 +196,8 @@ def suite():
     suite.addTest(PortalTests('test_login_check_observations'))
     
     return suite
-    
+
+
 def load_tests(loader, standard_tests, pattern):
     return suite()
 

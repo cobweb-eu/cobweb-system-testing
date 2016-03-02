@@ -20,19 +20,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 
-from envsys.testing.cobweb import cobweb_statics as CS
-from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
-from envsys.testing.cobweb import Survey
-from envsys.testing.selutils import conditions as ECENV
-from envsys.general.functions import parse_colon_separated_results
+from utils import statics as CS
+from utils import conditions as ECENV
+from utils import helpers, parse_observation, Survey
 
 # Statics for testing individual sub-tests (with pre-existing surveys/obs)
 
 TEST_SURVEY_ID = "27f37f2e-77b0-42c8-a384-ecc74ccf4c5b"
 TEST_SURVEY_NAME = " AnonUseCase Test 2016-01-22 15:51:34.526621"
 TEST_OBSERVATION_NAME = "App6891"
-TESTING = False # Set to true to test individual sub-tests
-SSL_VERIFY = True # Set to False to disable SSL verification globally
+
+TESTING = False     # Set to true to test individual sub-tests
+SSL_VERIFY = True   # Set to False to disable SSL verification globally
 
 # Statics for configuring input params
 
@@ -42,7 +41,8 @@ SURVEY_ABSTRACT = "Auto-created test survey from Anonymous Use Case auto system 
 
 TEST_USER_USERNAME = "testuser20"
 
-class AnonPortalTests(SurveyHelper):
+
+class AnonPortalTests(helpers.SurveyHelper):
     """
     Class containing the tests for the portal side
     of anonymous use case testing.
@@ -129,7 +129,7 @@ class AnonPortalTests(SurveyHelper):
         act = ActionChains(self.driver)
         act.move_to_element(map_canvas).move_by_offset(0, -5).click().perform()
     
-        obs_details = parse_colon_separated_results(
+        obs_details = parse_observation(
             self.wait.until(
                 EC.visibility_of_element_located(
                     (By.XPATH, CS.MAP_OBS_DETAILS)
@@ -141,7 +141,7 @@ class AnonPortalTests(SurveyHelper):
         self.assertEqual(obs_details['Science Value'], CS.OBSERVATION_TEXT)
 
 
-class AppTests(AppHelper):
+class AppTests(helpers.AppHelper):
     """ The tests on the App side of COBWEB for the
         registered user use case testing
 
@@ -185,8 +185,10 @@ def suite():
 
     return suite
 
+
 def load_tests(loader, standard_tests, pattern):
     return suite()
+
 
 if __name__ == '__main__':
     if not SSL_VERIFY:
@@ -200,14 +202,4 @@ if __name__ == '__main__':
             ssl._create_default_https_context = _create_unverified_https_context
 
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='/tmp/test-reports'))
-
-
-
-
-
-
-
-
-
-
 
