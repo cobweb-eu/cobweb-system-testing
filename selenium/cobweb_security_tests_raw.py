@@ -19,9 +19,9 @@ import sys
 from selenium import webdriver
 from time import sleep
 
-from envsys.testing.cobweb.helpers import SurveyHelper, AppHelper
-from envsys.testing.cobweb import cobweb_statics as CS
-from envsys.testing.cobweb import Survey, convert_from_friendly_name, CobwebUser
+from utils.helpers import SurveyHelper, AppHelper
+from utils import statics as CS
+from utils import Survey, convert_from_friendly_name, CobwebUser
 
 # STATIC TEST CONFIGURATION
 

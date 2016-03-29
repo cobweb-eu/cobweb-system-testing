@@ -7,9 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
-from envsys.testing.selutils import conditions as ECENV
-from envsys.testing.cobweb import cobweb_statics as CS
-from cobweb_reg_use_case_tests import SurveyHelper
+from utils import conditions as ECENV
+from utils import statics as CS
+from utils.helpers import SurveyHelper
 
 
 class PublishTests(SurveyHelper):
