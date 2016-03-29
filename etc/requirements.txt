@@ -2,3 +2,5 @@ OWSLib==0.10.3
 pycurl==7.43.0
 selenium==2.53.1
 xmlrunner==1.7.7
+Appium-Python-Client==0.22
+pytest==2.9.1
