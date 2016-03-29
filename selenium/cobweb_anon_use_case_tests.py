@@ -4,7 +4,7 @@
     It will then perform the necessary actions on an emulated device to submit
     an observation, before returning to the portal to check it is correctly
     visible.
-    
+
     This test will concentrate on running the public or anonymous usecase, rather
     than checking every part of the portal on the way functions correctly.
     These checks will be covered by separate tests...
@@ -47,14 +47,14 @@ class AnonPortalTests(helpers.SurveyHelper):
     Class containing the tests for the portal side
     of anonymous use case testing.
     """
-    
+
     def setUp(self):
         """ Set up the test pre-requisites for each test """
         self.USERNAME = 'sebclarke'
         self.PASSWORD = 'password'
         self.driver = webdriver.Chrome()
         super(AnonPortalTests, self).setUp()
-    
+
     def test_login_create_survey(self):
         """
         Test that we can login, create and join a survey
@@ -74,15 +74,15 @@ class AnonPortalTests(helpers.SurveyHelper):
         self.driver.switch_to.window(self.driver.window_handles[0])
         self._logout()
         self._login_with(TEST_USER_USERNAME, self.PASSWORD)
-    
+
         # Search and join the survey as test user
         global active_survey
         active_survey = my_survey
         self._join_survey(active_survey)
-       
+
     def test_login_check_observations(self):
         """ Test that we can login and see an observation
-            
+
             First checks that we have saved globals for a survey and
             observation, then checks the details of the stored observation on
             the portal page for the stored survey
@@ -92,12 +92,12 @@ class AnonPortalTests(helpers.SurveyHelper):
             self.fail("No observation has been made...")
         elif 'active_survey' not in globals():
             self.fail("No survey has been created...")
-            
+
         # Login (as coord) and go to the survey detail page
         self._accept_cookie_sign_in()
-        
+
         self.check_observation_minimap(active_survey, active_observation_name)
-        
+
         # Now try the main map viewer also
         # Click the view on map link and wait for the map canvas
         #self.driver.switch_to.default_content()
@@ -124,11 +124,11 @@ class AnonPortalTests(helpers.SurveyHelper):
         zoom_to_extent.click()
         self.get_by_xpath(CS.CLOSE_LAYERS).click()
         """
-    
+
         # Now click in the center and check the observations
         act = ActionChains(self.driver)
         act.move_to_element(map_canvas).move_by_offset(0, -5).click().perform()
-    
+
         obs_details = parse_observation(
             self.wait.until(
                 EC.visibility_of_element_located(
@@ -202,4 +202,3 @@ if __name__ == '__main__':
             ssl._create_default_https_context = _create_unverified_https_context
 
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='/tmp/test-reports'))
-

@@ -12,33 +12,33 @@ var XPATH_COOKIE_ACCEPT = '//*[@id="ng-app"]/body/div[1]/div[4]/div/div[1]/p[3]/
 
 casper.test.begin('Test login functionality', 8, function suite(test) {
 	casper.start('https://dyfi.cobwebproject.eu');
-	
+
     casper.then(function () {
         this.viewport(1920, 1200);
     });
-    
+
 	casper.thenClick(x(XPATH_COOKIE_ACCEPT), function() {
 	    console.log("Accepting cookie policy");
 	});
-	    	
+
 	casper.then(function() {
 		this.test.assertVisible({
 		    type: 'xpath',
 			path: XPATH_LOGIN_LINK
 		}, 'Login link found');
-		
+
 		this.test.assertNotVisible({
 		    type: 'xpath',
 			path: XPATH_LOGOUT_LINK
 		}, 'No logout link');
-   
+
 		firstUrl = this.getCurrentUrl();
 	});
-		    
+
 	casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -48,7 +48,7 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
             casper.test.fail('Timed out waiting for WAYF page to load (5s)', {name: 'WAYF Page Loaded'});
         }
     );
-		
+
     casper.then(function() {
 		this.test.assertExists({
 		    type: 'xpath',
@@ -56,11 +56,11 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
 		}, 'COBWEB IDP button found');
 		firstUrl = this.getCurrentUrl();
     });
-    
+
 	casper.thenClick(x(XPATH_COBWEB_IDP_BUTTON), function() {
         console.log("Clicked COBWEB IDP button");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -80,7 +80,7 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
 		    'j_password' : 'password' // enter your password here
 		}, true);
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -90,35 +90,35 @@ casper.test.begin('Test login functionality', 8, function suite(test) {
             caspter.test.fail("Timed out waiting for login form to return(5s)", {name: 'Login form returned'});
         }
     );
-   
+
     // try click the login link again because of bug!
     casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link again");
     });
-    
-    
+
+
     casper.then(function() {
         console.log('Looking for logout link');
 		this.test.assertVisible({
 		    type: 'xpath',
 			path: XPATH_LOGOUT_LINK
 		}, 'logout link found');
-		
+
 		this.test.assertNotVisible({
 		    type: 'xpath',
 			path: XPATH_LOGIN_LINK
 		}, 'Login link not visible');
     });
-    
-    
+
+
     casper.then(function() {
         casper.capture("./logged_in_new.png");
     });
-    
+
 	// Run all tests and finish
 	casper.run(function() {
         test.done();
     });
-	
+
 	phantom.clearCookies();
 });

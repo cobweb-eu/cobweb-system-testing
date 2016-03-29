@@ -81,16 +81,16 @@ class SimpleGetter(object):
 class SurveyHelper(unittest.TestCase, SimpleGetter):
     """ Base class that can perform a number of abstract
         functions related to surveys on the COBWEB portal
-        
+
         Sub-classed by others to write system-tests, or included within
         them to support other module tests
     """
-    
+
     def assertVisible(self, element):
         """ Assert that a web_element is displayed
         """
         return self.assertTrue(element.is_displayed())
-    
+
     def setUp(self):
         """ Set up the pre-requisites for each individual test
         """
@@ -102,12 +102,12 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         self.long_wait = WebDriverWait(self.driver, 60)
         self.public_wfs = WebFeatureService(CS.WFS_PUB_URL, version='2.0.0')
         self.private_wfs = WebFeatureService(CS.WFS_SEC_URL, version='2.0.0')
-        
+
     def tearDown(self):
         """ Cleanup after the test
         """
         self.driver.close()
-            
+
     def _accept_cookie_sign_in(self):
         """ Accept the cookie policy and perform sign in
         """
@@ -115,9 +115,9 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         self.long_wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.COOKIE_ACCEPT))
         ).click()
-        
+
         self._login_with(self.USERNAME, self.PASSWORD)
-        
+
     def _logout(self):
         """ Go the protected url and logout, will not work if not logged in
         """
@@ -126,7 +126,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
         ).click()
         self.current_user = None
-    
+
     def _create_survey(self, name, group_name='regusecase', abstract=CS.SURVEY_ABSTRACT):
         """ Create a new survey using name parameter as first base
             And group_name as second base.
@@ -149,7 +149,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.ID, CS.METADATA_GROUP_NAME))
         ).send_keys(group_name)
         self.get_by_xpath(CS.SURVEY_CREATE_BUTTON).click()
-        
+
         # Set up / rename new survey
         survey_name = "%s %s"%(name, datetime.datetime.now())
         title_input = self.wait.until(
@@ -167,7 +167,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             ))
         )
         return Survey(survey_link.get_attribute('href').split('/')[-1], survey_name)
-    
+
     def _create_public_survey(self, name, group_name='regusecase', abstract=CS.SURVEY_ABSTRACT):
         """ Create a new public survey using name parameter as first base
             And group_name as second base.
@@ -190,7 +190,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.ID, CS.METADATA_GROUP_NAME))
         ).send_keys(group_name)
         self.get_by_xpath(CS.SURVEY_CREATE_BUTTON).click()
-        
+
         # Set up / rename new survey
         survey_name = "%s %s"%(name, datetime.datetime.now())
         title_input = self.wait.until(
@@ -201,7 +201,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         title_input.send_keys(survey_name)
         abstract_input.clear()
         abstract_input.send_keys(abstract)
-        
+
         # Select 'Make public' button, wait until button changes colour, then save/close
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.PUBLISH_BUTTON))
@@ -216,10 +216,10 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             ))
         )
         return Survey(survey_link.get_attribute('href').split('/')[-1], survey_name)
-    
+
     def _author_survey(self, survey):
         """ Author a previously created survey
-        
+
             This involves opening the survey designer
             and adding various fields to the survey
         """
@@ -238,7 +238,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
         )
         self.assertIn(survey.name, title.text)
-        
+
         # Modify the survey - set the first question
         self.get_by_xpath(CS.AT_TITLE_EDIT).click()
         text_title = self.wait.until(
@@ -247,7 +247,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         text_title.clear()
         text_title.send_keys("Your Name")
         self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
-        
+
         # Drag and drop a widget
         drag_from = self.get_by_id(CS.AT_TEXT_CAP_WIDGET)
         drag_to = self.get_by_id(CS.AT_DROP_AREA)
@@ -262,7 +262,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         text_placeholder.clear()
         text_placeholder.send_keys("3.14159")
         self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
-        
+
         # Save survey
         self.get_by_xpath(CS.AT_SAVE_BUTTON).click()
         # Wait for confirmation and close window
@@ -271,10 +271,10 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         )
         self.driver.close()
         self.driver.switch_to_window(self.driver.window_handles[0])
-        
+
     def _author_image_capture_survey(self, survey):
         """ Author a previously created survey
-        
+
             This involves opening the survey designer
             and adding image capture widget
         """
@@ -284,14 +284,14 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.AUTH_TOOL_BUTTON))
         ).click()
-        
+
         # Switch to new window, check title of loaded survey
         self.driver.switch_to_window(self.driver.window_handles[1])
         title = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.AT_SURVEY_TITLE))
         )
         self.assertIn(survey.name, title.text)
-        
+
         # Modify the survey - set the first question
         self.get_by_xpath(CS.AT_TITLE_EDIT).click()
         text_title = self.wait.until(
@@ -300,7 +300,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         text_title.clear()
         text_title.send_keys("Your Name")
         self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
-        
+
         # Drag and drop a widget
         drag_from = self.get_by_id(CS.AT_TEXT_CAP_WIDGET)
         drag_to = self.get_by_id(CS.AT_DROP_AREA)
@@ -315,7 +315,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         text_placeholder.clear()
         text_placeholder.send_keys("3.14159")
         self.get_by_xpath(CS.AT_OPTIONS_SUBMIT_BUTTON).click()
-        
+
         # Save survey
         self.get_by_xpath(CS.AT_SAVE_BUTTON).click()
         # Wait for confirmation and close window
@@ -323,7 +323,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.ID, CS.AT_SAVE_CONFIRM))
         )
         self.driver.close()
-    
+
     def _join_survey(self, survey):
         """ Join a survey as the currently logged in user """
         self.driver.get(CS.SURVEY_DETAIL_URL + survey.id)
@@ -335,10 +335,10 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.JOINED_CONFIRM))
         )
         sleep(5)
-        
+
     def _login_with(self, username, password):
         """ Log in to COBWEB IDP using the username and password provided
-        
+
             This function assumes you are at a COBWEB
             page with the login link currently visible
         """
@@ -348,20 +348,20 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         ).click()
         self.wait.until(EC.visibility_of_element_located((By.ID, 'content')))
         self.get_by_css(CS.IDP_BUTTON).click()
-        
+
         # Login with username, password
         self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, CS.USER_INPUT))
         ).send_keys(username)
         self.get_by_css(CS.PW_INPUT).send_keys(password)
         self.get_by_css(CS.LOGIN_SUBMIT).click()
-        
+
         # Wait for the page to return logged in
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.LOGOUT_LINK))
         )
         self.current_user = username
- 
+
     def _delete_survey(self, survey):
         """ Log in as the coord account and delete the survey provided
         """
@@ -375,19 +375,19 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
             EC.visibility_of_element_located((By.XPATH, CS.METADATA_SEARCH_INPUT))
         ).send_keys(survey.id)
         self.get_by_xpath(CS.METADATA_SEARCH_GO).click()
-          
+
         s_link = self.wait.until(
             EC.visibility_of_element_located((
                 By.CSS_SELECTOR,
                 'a[data-ng-href="catalog.search#/metadata/%s"]'%survey.id
             ))
         )
-        
+
         s_link.find_element_by_xpath('../../td[3]/a').click()
-        
+
     def _publish_survey(self, survey):
         """ Publish a survey
-        
+
             Goes to the creation toolbox and finds the link for the survey
             according to its name. Clicks the link, and then clicks publish
         """
@@ -413,7 +413,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.SURVEY_LIST_AREA))
         )
-        
+
     def _remove_user_from_group(self, user, group_name):
         """ Login as admin, find the user, find the group and deselect it
         """
@@ -436,40 +436,40 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         membership_list = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.PARTICIPANT_LIST))
         )
-        
+
         group_option = self.wait.until(
             EC.visibility_of_element_located((
                 By.XPATH,
                 '//option[contains(., "%s") and @selected]'%group_name))
         )
-            
-        
+
+
         # action chain to shift-click the option to deselect
         act = ActionChains(self.driver)
         act.key_down(Keys.CONTROL).click(group_option).key_up(Keys.CONTROL).perform()
-        
+
         # save the user
         self.get_by_xpath(CS.SAVE_USER_BUTTON).click()
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, '//p[contains(., "userUpdated")]'))
         )
-        
+
     def check_observation_minimap(self, survey, observation):
         """ Checks that an observation is visible through the portal
-        
+
             This check looks at the minimap (contingency viewer) and
             takes the survey and observation details to check against
         """
         self.driver.get(CS.SURVEY_DETAIL_URL + survey.id)
         self.driver.switch_to.frame(self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.IFRAME))))
-        
+
         minimap = self.wait.until(
             EC.visibility_of_element_located((By.XPATH, '//*[name()="svg"]')))
-        
+
         act = ActionChains(self.driver)
         act.move_to_element(minimap).move_by_offset(0, -5).click().perform()
-            
+
         try:
             minimap_info = self.wait.until(
                 EC.visibility_of_element_located((By.XPATH,
@@ -481,25 +481,25 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         finally:
             self.driver.switch_to.default_content()
 
-        
+
         self.assertEqual(obs_details['Name'], observation)
         self.assertEqual(obs_details[CS.TEXT_INPUT_TITLE], CS.OBSERVATION_TEXT)
-        
+
     def check_public_observation_wfs(self, survey, observation):
         res = json.load(self.public_wfs.getfeature('sid-%s'%survey.id,
                                                    outputFormat='json'))
         self._check_features_contain_observation(res, observation)
-        
+
     def check_private_observation_wfs(self, survey, observation, uuid):
         """ Checks that an observation is visible on the private WFS
             endpoint. This check needs to send uuid and cookie info.
-            
+
             :param survey: The survey object to check results on
             :param observation: The name of the observation to check for
             :param uuid: The uuid of the user to perform the check as
         """
         log = logging.getLogger('SurveyHelper.check_private_observation_wfs')
-        
+
         request = self.private_wfs.getGETGetFeatureRequest('sid-%s'%survey.id,
                                                       outputFormat='json')
         log.debug("performing request %s"%request)
@@ -517,7 +517,7 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         response = json.load(strbuf)
         strbuf.close()
         self._check_features_contain_observation(response, observation)
-        
+
     def _check_features_contain_observation(self, json_features, observation):
         """ Check parsed JSON for existence of the specific observation """
         log = logging.getLogger('SurveyHelper._check_features_contain_observation')
@@ -527,22 +527,22 @@ class SurveyHelper(unittest.TestCase, SimpleGetter):
         my_observations = [f['properties'] for f in json_features['features']
                           if f['properties']['qa_name'] == observation]
         self.assertGreater(len(my_observations), 0, "No matching observations")
-        
+
         # Test observation has the right text (take first matching)
         obs = my_observations[0][convert_from_friendly_name(CS.TEXT_INPUT_TITLE)]
         self.assertEqual(obs, CS.OBSERVATION_TEXT,
                          "Observation text does not match")
-        
+
 class AppHelper(unittest.TestCase, SimpleGetter):
     """ Base class to perform a number of functions
         on the COBWEB app on an emulated android device
-        
+
         This class uses appium to perform the commands
         and is extended or included by other classes to
         support tests
     """
-    
-    
+
+
     def runTest(self):
         """ Placeholder to allow construction independently from
             unittest test cases
@@ -562,42 +562,42 @@ class AppHelper(unittest.TestCase, SimpleGetter):
             'platformVersion': PLATFORM_VERSION,
             'deviceName': 'Android Emulator'
         }
-        
+
         if (PLATFORM_VERSION != '4.4'):
             desired_caps['automationName'] = 'selendroid'
 
         self.driver = appdriver.Remote('http://localhost:4723/wd/hub',
                                        desired_caps)
         self.driver.switch_to.context('WEBVIEW_uk.ac.edina.cobweb')
-        
+
         self.wait = WebDriverWait(self.driver, 20)
         self.long_wait = WebDriverWait(self.driver, 50)
-        
+
     def tearDown(self):
         """ Cleanup after each test """
         self.driver.quit()
-    
+
     def _close_eula(self):
         """ Close the EULA dialog
         """
         self.wait.until(
             EC.element_to_be_clickable((By.ID, CS.APP_EULA_ACCEPT))
         ).click()
-        
+
     def login_with(self, username, password):
         """ Log in to the app with the username and password provided
         """
         download_nav_link = self.get_by_css(CS.APP_DOWNLOAD_NAV).click()
-        
+
         # Get list of active pages before clicking login (opens new page)
         whs = self.driver.window_handles
         cwh = self.driver.current_window_handle
-        
+
         # Click Login button
         self.get_by_css(CS.APP_LOGIN_LINK).click()
         new_window = self.wait.until(ECENV.new_window_created(whs))
         self.driver.switch_to_window(new_window)
-        
+
         # Select COBWEB IDP
         self.get_by_css(CS.IDP_BUTTON).click()
         # Fill form fields
@@ -608,7 +608,7 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         password_input.send_keys(password)
         self.driver.find_element_by_css_selector(CS.LOGIN_SUBMIT).click()
         self.driver.switch_to_window(cwh)
-        
+
         # Wait for successful return
         try:
             self.wait.until(
@@ -617,7 +617,7 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         except TimeoutException:
             self.fail("Login did not complete successfuly")
         self.current_user = username
-    
+
     def sync_surveys(self):
         """ Synchronise the registered surveys
         """
@@ -625,18 +625,18 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         self.wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, CS.APP_SYNC_BUTTON))
         ).click()
-        
+
         sleep(3)
-        
+
         self.wait.until(
             EC.invisibility_of_element_located((By.ID, 'download-popup-popup'))
         )
-            
+
     def sync_public_survey(self, survey):
         """ Sync to a particular public survey
         """
         # Check if we are on the download page already, if not click it
-        if not self.check_exists(self.get_by_id, "download-page"):    
+        if not self.check_exists(self.get_by_id, "download-page"):
             self.get_by_css(CS.APP_DOWNLOAD_NAV).click()
         self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, CS.APP_DL_PUB))
@@ -647,7 +647,7 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         self.get_by_xpath(CS.PUBLIC_FILTER).send_keys(survey.name[:7])
         switch_xpath = '//input[@data-editor-name="%s.edtr"]'%survey.id
         switch = self.wait.until(
-            EC.presence_of_element_located((By.XPATH, switch_xpath))    
+            EC.presence_of_element_located((By.XPATH, switch_xpath))
         )
         the_link = switch.find_element_by_xpath('..')
         if not switch.is_selected():
@@ -662,32 +662,32 @@ class AppHelper(unittest.TestCase, SimpleGetter):
             EC.invisibility_of_element_located((By.ID, CS.APP_PUB_DL_POPUP))
         )
         self.assertEqual(switch.is_selected(), True, "Failed to sync public survey")
-    
+
     def close_eula_login_sync_surveys(self, username, password):
         """ Convenience to close eula, login and sync all in one
         """
         self._close_eula()
         self.login_with(username, password)
         self.sync_surveys()
-     
+
     def make_observation(self, survey, observation_text):
         """ Make an observation to a survey using the provided text
         """
         log = logging.getLogger('AppHelper.make_observation')
         log.debug("Making observation on %s as %s"%(survey.name, self.current_user))
         observation_name = self._begin_observation(survey)
-        
+
         text_input = self.get_by_css(CS.APP_TEXT_OBS_2)
         text_input.send_keys(observation_text)
         self.driver.find_element_by_css_selector(CS.APP_RECORD_OBS).click()
-        
+
         # Wait for GPS fix warning to appear, then dissappear - or not!
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
         self.long_wait.until(EC.invisibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
-        
+
         # Save observation (without moving it)
         self.get_by_id(CS.APP_SAVE_OBS).click()
-        
+
         # Upload observations
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.APP_LIST_OBS))
@@ -695,10 +695,10 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.APP_OBS_UPLOAD))
         ).click()
-        
+
         # Wait for confirm box to appear and dissapear
         sleep(3)
-        
+
         # Check our observation is uploaded
         obs_link = self.get_by_xpath('//a[text()="%s"]'%observation_name)
         tick_div = obs_link.find_element_by_xpath('../../div[1]')
@@ -706,24 +706,24 @@ class AppHelper(unittest.TestCase, SimpleGetter):
                       tick_div.get_attribute("class"))
         log.debug("Made observation %s"%observation_name)
         return observation_name
-    
+
     def make_simple_observation(self, survey):
         """ Make an image observation on the survey
-        
+
             This will just select the first image from recent list
         """
         observation_name = self._begin_observation(survey)
-        
+
         # Fill image observation
         self.driver.find_element_by_css_selector(CS.APP_RECORD_OBS).click()
-        
+
         # Wait for GPS fix warning to appear, then dissappear - or not!
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
         self.long_wait.until(EC.invisibility_of_element_located((By.XPATH, CS.APP_GPS_SYNC)))
-        
+
         # Save observation (without moving it)
         self.get_by_id(CS.APP_SAVE_OBS).click()
-        
+
         # Upload observations
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.APP_LIST_OBS))
@@ -731,19 +731,19 @@ class AppHelper(unittest.TestCase, SimpleGetter):
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.APP_OBS_UPLOAD))
         ).click()
-        
+
         # Wait for confirm box to appear and dissapear
         sleep(3)
-        
+
         # Check our observation is uploaded
         obs_link = self.get_by_xpath('//a[text()="%s"]'%observation_name)
         tick_div = obs_link.find_element_by_xpath('../../div[1]')
         self.assertIn("saved-records-list-synced-true",
                       tick_div.get_attribute("class"))
-    
+
         return observation_name
-    
-    
+
+
     def _begin_observation(self, survey):
         """ Starts an observation, returns the observation name
         """
@@ -760,25 +760,25 @@ class AppHelper(unittest.TestCase, SimpleGetter):
                 else:
                     log.debug("Got visible capture link")
                     break
-                
+
             self.wait.until(
                 EC.visibility_of_element_located((By.ID, CS.APP_CAP_VIEW))
             )
-            
+
         # Check if there are some surveys
         found_surveys = self.list_by_css(CS.APP_SURVEY_LINKS)
         # Find and click our survey
         survey_ids = [el.get_attribute("data-editor-type").split('.')[0] for el in found_surveys]
-        
+
         log.debug('Looking for survey %s'%survey)
         log.debug('looking in %s'%survey_ids)
-        
+
         self.assertIn(survey.id, survey_ids, "Survey not in synced list")
         found_surveys[survey_ids.index(survey.id)].click()
-        
+
         # Name the observation, return to be stored as global to check later
         observation_name = "App%s"%random.randint(0, 99999)
-    
+
         # Make an observation - use text fields
         try:
             self.wait.until(
@@ -787,7 +787,5 @@ class AppHelper(unittest.TestCase, SimpleGetter):
             ).send_keys(observation_name)
         except TimeoutException:
             self.fail("Failed to bring up observation page for survey")
-            
+
         return observation_name
-
-

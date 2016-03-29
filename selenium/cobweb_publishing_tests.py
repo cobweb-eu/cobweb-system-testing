@@ -13,7 +13,7 @@ from cobweb_reg_use_case_tests import SurveyHelper
 
 
 class PublishTests(SurveyHelper):
-    
+
     def setUp(self):
         """self.driver = webdriver.Chrome('C:\Users\Admin.ENVSYS-704\Desktop\Extra\chromedriver_win32\chromedriver.exe')"""
         self.driver = webdriver.Firefox()
@@ -45,9 +45,9 @@ class PublishTests(SurveyHelper):
     def tearDown(self):
         self._delete_survey(self.private_survey_name)
         self._delete_survey(self.public_survey_name)
-        
+
         self.driver.close()
-        
+
     def test_visible(self):
         # Delete cookies to clear login, return to the homepage
         self.driver.get(CS.LIVE_URL)
@@ -61,14 +61,14 @@ class PublishTests(SurveyHelper):
         ).send_keys(self.public_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
         # If survey is visible, true, if not, false/fail
-        
+
         try:
             self.wait.until(
                 EC.visibility_of_element_located((By.XPATH, '//a[contains(., "%s")]'%self.public_survey_name))
             )
         except TimeoutException:
             self.fail("Did not find survey in search")
-            
+
         # Check private survey is not shown!
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_CLEAR))
@@ -76,13 +76,13 @@ class PublishTests(SurveyHelper):
         self.wait.until(EC.visibility_of_element_located((By.XPATH, CS.NSEARCH_INPUT))
         ).send_keys(self.private_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
-        
+
         # YOU NEED A SELF.WAIT.UNTIL to not do any more processing until search
         # results are returned
-        
+
         matching_survey_links = self.list_by_xpath('//a[contains(., "%s")]'%self.private_survey_name)
         self.assertEqual(len(matching_survey_links), 0, 'Private survey visible when not logged in!')
-        
+
         # Next, test for visibility of the Private Survey. Return to homepage, sign-in as Registered User account
         self.driver.get(CS.PRIV_URL)
         self.wait.until(
@@ -96,10 +96,10 @@ class PublishTests(SurveyHelper):
         ).send_keys(self.private_survey_name)
         self.get_by_xpath(CS.NSEARCH_SUBMIT).click()
         self.assertEqual(len(matching_survey_links), 1, 'Private survey NOT visible when logged in!')
-        
+
         # If survey is visible, true, if not false/fail. Portal end of test is complete.
         self.assertTrue(False)
-        
+
 
 if __name__ == '__main__':
     unittest.main()

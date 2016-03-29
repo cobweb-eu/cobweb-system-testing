@@ -51,36 +51,36 @@ var test_survey_title = TEST_SURVEY_TITLE_BASE.concat(test_run_time.toString());
 // start the tests!
 casper.test.begin('Registered user use-case test', 34, function suite(test) {
     casper.start('https://dyfi.cobwebproject.eu');
-   
+
     // set up the viewport for screen capping
     casper.then(function () {
         this.viewport(1920, 1200);
-    }); 
-    
+    });
+
     // test correct page has loaded
     casper.then(function() {
         test.assertTitle("COBWEB Dyfi Biosphere Reserve Portal (Beta) - Cobweb", "Portal homepage displayed");
         casper.capture('image_output/1_Start_Page.png');
     });
-    
+
     casper.then(function() {
        this.test.assertExists({
 		    type: 'xpath',
 			path: '//div[@class="cookie-warning"]'
 		}, 'Cookie warning displayed');
     });
-    
+
     // accept the cookie policy
 	casper.thenClick(x(XPATH_COOKIE_ACCEPT), function() {
 	    console.log("Accepting cookie policy");
         firstUrl = this.getCurrentUrl();
-	});    
-	
+	});
+
 	// click the login link
     casper.thenClick(x(XPATH_LOGIN_LINK), function() {
         console.log("Clicked login link");
-    });	
-    
+    });
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -92,11 +92,11 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             casper.test.fail('Timed out waiting for WAYF page to load (5s)', {name: 'WAYF Page Loaded'});
         }
     );
-    
+
     casper.thenClick(x(XPATH_COBWEB_IDP_BUTTON), function() {
         console.log("Clicked COBWEB IDP button");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -109,7 +109,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             casper.test.fail('Timed out waiting for COBWEB Login to load (5s)', {name: 'COBWEB Login page displayed'});
         }
     );
-    
+
     casper.then(function() {
 		// Complete the login form
 		console.log('Posting to login form');
@@ -119,7 +119,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		    'j_password' : 'password' // enter your password here
 		}, true);
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -128,7 +128,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             firstUrl = this.getCurrentUrl();
         }
     );
-    
+
     casper.then(function() {
         casper.capture('image_output/4_Logged_in.png');
         this.test.assertVisible({
@@ -136,7 +136,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		    path: XPATH_LOGOUT_LINK
 	    }, 'Successfully logged in');
     });
-    
+
     // Assert we have the capability to create new surveys
     casper.then(function() {
         this.test.assertVisible({
@@ -145,12 +145,12 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
         }, 'Add record link found');
         firstUrl = this.getCurrentUrl();
     });
-    
+
     // click the editor icon
     casper.thenClick(x(XPATH_ADD_NEW_RECORD_LINK), function() {
         console.log("Clicked add new record");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -162,7 +162,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             casper.test.fail("Timed out waiting for editor page(5s)", {name: 'Main editor page loaded'});
         }
     );
-    
+
     // assert we can see the 'Add content' button
     casper.then(function() {
         this.test.assertVisible({
@@ -171,22 +171,22 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
         }, 'Add content button found');
         firstUrl = this.getCurrentUrl();
     });
-    
+
     // click add content
     casper.thenClick(x(XPATH_ADD_CONTENT_BUTTON), function() {
         console.log("Clicked add content button");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
         }, function then() {
             casper.test.pass("Survey creation page loaded");
-        }, function timeout() {    
+        }, function timeout() {
             casper.test.fail("Timed out waiting for survey creation page (5s)", {name: 'Survey creation page loaded'});
         }
     );
-    
+
     // we need to wait for the assets to load!
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_DATASET_SELECTOR),
@@ -200,7 +200,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 	        }
 	    );
     });
-    
+
     // assert exists and select survey element
     casper.then(function() {
         this.test.assertVisible({
@@ -208,11 +208,11 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 			path: XPATH_SURVEY_DATASET_SELECTOR
         }, 'Survey dataset is visible');
     });
-    
+
     casper.thenClick(x(XPATH_SURVEY_DATASET_SELECTOR), function() {
         console.log("Selected survey dataset");
     });
-    
+
     // assert the templates are shown
     casper.then(function() {
         this.test.assertVisible({
@@ -220,7 +220,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 			path: XPATH_SURVEY_TEMPLATES_LIST
         }, 'Survey templates are displayed');
     });
-    
+
     casper.thenClick(x(XPATH_SURVEY_TEMPLATE_SELECTOR), function() {
         console.log("Selected Biological Monitoring template");
     });
@@ -232,7 +232,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 			path: XPATH_GROUP_NAME_INPUT
 		}, 'Group name input box exists');
 	});
-	
+
     casper.then(function() {
 		this.test.assertVisible({
             type: 'xpath',
@@ -249,7 +249,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		firstUrl = this.getCurrentUrl();
         casper.capture('image_output/7_Survey_Creator_Filled.png');
     });
-    
+
     casper.thenClick(x(XPATH_SURVEY_CREATE_BUTTON), function() {
         console.log("Filled form and clicked 'Create'");
     });
@@ -263,7 +263,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             casper.test.fail("Timed out waiting for survey creation (5s)", {name: 'Survey created ok'});
         }
     );
-    
+
     // wait for all resources to load!
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_METADATA_FORM),
@@ -277,25 +277,25 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 	        }
 	    );
     });
-    
-    // find and open the survey metadata editor   
+
+    // find and open the survey metadata editor
     casper.then(function() {
 		this.test.assertVisible({
 			type: 'xpath',
 			path: XPATH_SURVEY_TITLE_INPUT
 		}, 'Survey title input visible');
-		
+
 		this.test.assertVisible({
             type: 'xpath',
 			path: XPATH_SURVEY_METADATA_SAVECLOSE_BUTTON
         }, 'Survey metadata save and close button exists');
-        
+
         this.test.assertVisible({
             type: 'xpath',
 			path: XPATH_METADATA_SAVE_BUTTON
         }, 'Survey metadata save button exists');
 	});
-    
+
     casper.then(function() {
         var fields = {};
 	    fields[XPATH_SURVEY_TITLE_INPUT] = test_survey_title;
@@ -303,11 +303,11 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		this.fillXPath('form', fields, false);
         casper.capture('image_output/9_Metadata_editor_page_filled.png');
     });
-    
+
     casper.thenClick(x(XPATH_METADATA_SAVE_BUTTON), function() {
         console.log("Clicked Save on survey metadata editor");
     });
-    
+
     casper.then(function() {
         this.waitWhileVisible(x(XPATH_METADATA_FADE_BACKDROP),
             function then() {
@@ -320,12 +320,12 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             }
         );
     });
-    
+
     // load survey metadata list again manually?
     casper.thenOpen('https://dyfi.cobwebproject.eu/geonetwork/private/eng/catalog.edit', function() {
         console.log('refreshing the metadata survey list');
     });
-    
+
     // wait for all resources to load!
     casper.then(function() {
 	    this.waitForSelector(x(XPATH_SURVEY_LIST_AREA),
@@ -339,8 +339,8 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 	        }
         );
     });
-   
-    // assert we can find the survey in the list    
+
+    // assert we can find the survey in the list
     var xpath_survey_list_link = '//a[text()="REPLACE"]'.replace("REPLACE", test_survey_title);
     casper.then(function() {
         casper.capture('SurveyList.png');
@@ -350,12 +350,12 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		}, 'Found survey title in backend');
 		firstUrl = this.getCurrentUrl();
     });
-    
+
     // click on the survey
     casper.thenClick(x(xpath_survey_list_link), function() {
         console.log("Clicked on newly renamed survey");
     });
-    
+
     casper.waitFor(
         function check() {
             return this.getCurrentUrl() != firstUrl;
@@ -365,12 +365,12 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
                 path: XPATH_SURVEY_DETAIL_TITLE
             }, " ".concat(test_survey_title), 'Loaded survey page ok');
             casper.capture('image_output/11_Survey_Detail_Page_Pass.png');
-        }, function timeout() { 
+        }, function timeout() {
             casper.capture('image_output/11_Survey_Detail_Page_Fail.png');
             casper.test.fail("Timed out waiting for survey page (5s)", {name: 'Loaded survey page ok'});
         }
     );
-    
+
     // click on the authoring tool
     casper.then(function() {
         this.test.assertVisible({
@@ -379,12 +379,12 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		}, 'Found survey designer button');
 		firstUrl = this.getCurrentUrl();
     });
-    
+
     casper.thenClick(x(XPATH_AUTH_TOOL_BUTTON), function() {
         console.log("Clicked on survey designer");
     });
-    
-    casper.waitForPopup(/cobweb-authoring-tool/, 
+
+    casper.waitForPopup(/cobweb-authoring-tool/,
         function then() {
             casper.test.pass('Suvey designer pop-up launched');
         },
@@ -392,29 +392,29 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             casper.test.fail("Timed out waiting for survey designer", {name: 'Suvey designer pop-up launched'});
         }
     );
-    
+
     casper.withPopup(/cobweb-authoring-tool/, function() {
-    
+
         casper.viewport(1920, 1200).then(function() {
             casper.capture('image_output/12_Survey_Designer_Popup.png');
         });
-        
+
         this.test.assertSelectorHasText({
             type: 'xpath',
             path: XPATH_AT_SURVEY_TITLE
         }, test_survey_title, 'Survey designer loaded for survey');
-        
+
         casper.then(function() {
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_TITLE_EDIT
 		    }, 'Found pen icon for first question');
         });
-        
+
         casper.thenClick(x(XPATH_AT_TITLE_EDIT), function() {
             console.log("Clicked pen to edit first question");
         });
-        
+
         casper.then(function() {
             casper.capture('image_output/13_Survey_Designer_edit_title.png');
             this.test.assertVisible({
@@ -422,14 +422,14 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 			    path: XPATH_AT_OPTIONS_DIALOG
 		    }, 'Widget options dialog displayed');
         });
-        
+
         casper.then(function() {
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_TEXT_TITLE
 		    }, 'Text question title input found');
         });
-        
+
         casper.then(function() {
             console.log("Filling text question title field");
             var fields = {};
@@ -437,19 +437,19 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		    this.fillXPath('form', fields, false);
 		    casper.capture('image_output/14_Survey_Designer_edit_title_filled.png');
         });
-        
+
         casper.then(function() {
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_OPTIONS_SUBMIT_BUTTON
 		    }, 'Widget option submit button found');
         });
-        
+
         casper.thenClick(x(XPATH_AT_OPTIONS_SUBMIT_BUTTON), function() {
             console.log("Clicked widget options submit button");
             casper.capture('image_output/15_Survey_Designer_edit_title_submitted.png');
         });
-        
+
         // DRAG AND DROP CODE
         casper.then(function() {
             console.log("Attempting to drag photo capture widget");
@@ -457,7 +457,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
             mouse.move(x(XPATH_AT_DROPPABLE_AREA));
             mouse.up(x(XPATH_AT_DROPPABLE_AREA));
         });
-        
+
         casper.then(function() {
             casper.capture('image_output/16_Survey_Designer_added_photo.png');
             this.test.assertVisible({
@@ -465,7 +465,7 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 			    path: XPATH_AT_IMAGE_TITLE_INPUT
 		    }, 'Image capture title input found');
         });
-        
+
         casper.then(function() {
             console.log("Filling image capture title field");
             var fields = {};
@@ -473,23 +473,23 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
 		    this.fillXPath('form', fields, false);
 		    casper.capture('image_output/17_Survey_Designer_photo_filled.png');
         });
-        
+
         casper.thenClick(x(XPATH_AT_OPTIONS_SUBMIT_BUTTON), function() {
             console.log("Clicked widget options submit button");
             casper.capture('image_output/18_Survey_Designer_photo_saved.png');
         });
-        
+
         casper.then(function() {
             this.test.assertVisible({
 			    type: 'xpath',
 			    path: XPATH_AT_SAVE_BUTTON
 		    }, 'Survey designer save button found');
         });
-        
+
         casper.thenClick(x(XPATH_AT_SAVE_BUTTON), function() {
             console.log("Clicked survey designer save button");
         });
-        
+
         casper.then(function() {
             this.waitUntilVisible(x(XPATH_AT_SAVE_CONFIRM_DIALOG),
                 function then() {
@@ -502,27 +502,27 @@ casper.test.begin('Registered user use-case test', 34, function suite(test) {
                 }
             );
         });
-        
+
         casper.thenClick(x(XPATH_AT_SAVE_CONFIRM_CLOSE_BUTTON), function() {
             console.log("Clicked close on survey save confirmation");
         });
-        
+
         casper.then(function() {
             casper.capture('image_output/20_Survey_Synchronised.png');
             this.test.assertSelectorHasText({
                 type: 'xpath',
                 path: XPATH_AT_SAVE_STATUS
             }, 'Synchronized', 'Survey synchronised');
-        });   
-        
+        });
+
     });
-   
-    
+
+
     // Run all tests and finish
 	casper.run(function() {
         test.done();
     });
-	
+
 	phantom.clearCookies();
-   
+
 });

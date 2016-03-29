@@ -1,14 +1,14 @@
 """ This is a python script to automate the testing of the security
     model within cobweb for raw observations. This will test the backend
     services (WFS/WMS) and then check the front end components.
-    
+
     For public surveys:
         All users should be able to see all submitted observations
     For private surveys:
         Non-memeber: see own observations only
         Member: see all observations
         Coord: see all observations
-    
+
 """
 
 import json
@@ -59,13 +59,13 @@ PUB_OBS_TEXT = CS.OBSERVATION_TEXT
 class RawObservationTests(SurveyHelper):
     """ A class providing tests to check RAW observation visibility
         matches the defined security model for RAW observations in COBWEB
-        
+
         Currently this is:
             Public surveys: All users see all observations, logged in or not
             Private surveys: Members see own observations, otherwise
             they see only their own
     """
-    
+
     def setUp(self):
         """ Perform initialisation per test
             This function is called by unittest
@@ -73,17 +73,17 @@ class RawObservationTests(SurveyHelper):
         # Store the current test
         log = logging.getLogger('RawObservationTests.setUp')
         log.debug('Setting up for %s'%self.id().split('.')[-1])
-        
+
         self.USERNAME = 'sebclarke'
         self.PASSWORD = 'password'
         self.driver = webdriver.Chrome()
         self.user_a = CobwebUser('AutoIntegrationTestUser1', 'password', '11e9251a-0f64-d597-575b-9fd702ba0ab5')
         self.user_b = CobwebUser('AutoIntegrationTestUser2', 'password', '38f88da7-6550-076a-935a-ea22242258df')
         super(RawObservationTests, self).setUp()
-        
+
         # Sign in with self.USERNAME
         self._accept_cookie_sign_in()
-                
+
         if not SURVEYS_EXIST:
             # Create and author a private survey
             self.private_survey = self._create_survey("ObsTestPrivate", group1, CS.SURVEY_ABSTRACT)
@@ -91,7 +91,7 @@ class RawObservationTests(SurveyHelper):
             # Create and author public survey
             self.public_survey = self._create_public_survey("ObsTestPublic", group2, CS.SURVEY_ABSTRACT)
             self._author_survey(self.public_survey)
-            
+
             # Logout from admin user, join the private survey as both users
             self.driver.get(CS.PRIV_URL)
             self._logout()
@@ -105,14 +105,14 @@ class RawObservationTests(SurveyHelper):
             # Use the configured existing surveys
             self.private_survey = PRIV_SURVEY
             self.public_survey = PUB_SURVEY
-        
-        if not OBSERVATIONS_EXIST:        
+
+        if not OBSERVATIONS_EXIST:
             # Start the app, sync surveys, and make observations
             self.pub_obs_name = self._perform_public_observation(
                 self.user_a,
                 self.public_survey,
                 PUB_OBS_TEXT
-            )    
+            )
             self.priv_obs_name_a = self._perform_private_observation(
                 self.user_a,
                 self.private_survey,
@@ -128,7 +128,7 @@ class RawObservationTests(SurveyHelper):
             self.pub_obs_name = PUB_OBS_NAME
             self.priv_obs_name_a = PRIV_OBS_NAME_A
             self.priv_obs_name_b = PRIV_OBS_NAME_B
-        
+
     def tearDown(self):
         """ Perform cleanup after each test
             This function called by unittest
@@ -137,11 +137,11 @@ class RawObservationTests(SurveyHelper):
             self._delete_survey(self.public_survey)
             self._delete_survey(self.private_survey)
         super(RawObservationTests, self).tearDown()
-        
-        
+
+
     def _perform_public_observation(self, user, survey, text):
         """ Perform an observation on a public survey
-            
+
             This establishes an app instance, logs in,
             enables the survey in question, then performs
             the observation. Finishes by closing the AppHelper.
@@ -154,10 +154,10 @@ class RawObservationTests(SurveyHelper):
         obs_name = appHelper.make_observation(survey, text)
         appHelper.tearDown()
         return obs_name
-    
+
     def _perform_private_observation(self, user, survey, text):
         """ Perform an observation on a public survey
-            
+
             This establishes an app instance, logs in,
             syncs the registered surveys, then performs
             the observation. Finishes by closing the AppHelper.
@@ -168,14 +168,14 @@ class RawObservationTests(SurveyHelper):
         obs_name = appHelper.make_observation(survey, text)
         appHelper.tearDown()
         return obs_name
-    
+
     def test_observation_visibility(self):
         """ Test that observations conform to the correct security model.
             Test through WFS/WMS and browser.
         """
         # Check that anon user can see public observation - WFS
         self.check_public_observation_wfs(self.public_survey, self.pub_obs_name)
-        
+
         # Check that UserA can see both private observations
         self.check_private_observation_wfs(self.private_survey, self.priv_obs_name_a, self.user_a.id)
 
@@ -190,22 +190,22 @@ class PublishAuthorSyncTest(SurveyHelper):
         self.driver = webdriver.Chrome()
         super(PublishAuthorSyncTest, self).setUp()
         self._accept_cookie_sign_in()
-        
+
     def test_create_author_publish(self):
         self.survey_pre_author = self._create_survey("AuthorFirst")
         self._author_survey(self.survey_pre_author)
         self._publish_survey(self.survey_pre_author)
-        
+
     def test_create_publish_author(self):
         self.survey_pre_publish = self._create_public_survey("PublishFirst")
         self._author_survey(self.survey_pre_publish)
-    
+
 
 def suite():
     """ Define what tests to run and the order in
         which they shall be executed for this test
     """
-    
+
     # set up logging to debug the tests
     logging.basicConfig(stream=sys.stderr)
     #logging.getLogger('SurveyHelper._check_features_contain_observation').setLevel(logging.DEBUG)
@@ -219,7 +219,7 @@ def suite():
     #suite.addTest(PublishAuthorSyncTest('test_create_author_publish'))
     #suite.addTest(PublishAuthorSyncTest('test_create_publish_author'))
     return suite
-    
+
 def load_tests(loader, standard_tests, pattern):
     return suite()
 
