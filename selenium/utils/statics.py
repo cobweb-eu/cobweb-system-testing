@@ -97,6 +97,8 @@ APP_LOGOUT_LINK = '//p[text()="Logout"]'
 APP_DL_PUB = 'a.download-public-forms'
 APP_PUB_LIST = 'editors-list'
 APP_PUB_DL_POPUP = 'download-popup-popup'
+APP_ACTIVE_PAGE = 'div[data-role="page"].ui-page-active'
+APP_NAV_BTN_FMT = 'div[data-role="navbar"] a.{button_class}'
 
 URL_LOGOUT = 'https://ds.cobweb.secure-dimensions.de/WAYF/logout?return=https%3A%2F%2Fdyfi.cobwebproject.eu%2FShibboleth.sso%2FLogout%3Freturn%3Dhttps%3A%2F%2Fdyfi.cobwebproject.eu'
 TEXT_INPUT_TITLE = "Science Value"

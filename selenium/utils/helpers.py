@@ -584,6 +584,35 @@ class AppHelper(unittest.TestCase, SimpleGetter):
             EC.element_to_be_clickable((By.ID, CS.APP_EULA_ACCEPT))
         ).click()
 
+    def change_page(self, page, page_id = None, button_class = None):
+        """ If not in the page use the nav button to change pages
+        """
+        log = logging.getLogger('AppHelper.change_page')
+
+        # If not specific selectors were given assume the convention name
+        if not page_id:
+            page_id = page + '-page'
+        if not button_class:
+            button_class = page + '-button'
+
+        log.debug('Finding the active page')
+        active_page = self.get_by_css(CS.APP_ACTIVE_PAGE)
+        log.debug(dir(active_page))
+
+        if active_page.id is not page_id:
+            log.debug('Changing to page: ' + page_id)
+            button = active_page.find_element_by_css_selector(
+                CS.APP_NAV_BTN_FMT.format(button_class=button_class)
+            )
+            self.assertTrue(button.is_displayed)
+            button.click()
+
+        self.wait.until(
+            EC.presence_of_element_located((By.ID, page_id))
+        )
+
+        return self.get_by_css(CS.APP_ACTIVE_PAGE)
+
     def login_with(self, username, password):
         """ Log in to the app with the username and password provided
         """
